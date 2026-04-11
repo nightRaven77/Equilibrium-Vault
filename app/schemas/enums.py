@@ -31,3 +31,22 @@ class OccurrenceStatus(str, Enum):
     paid = "paid"
     failed = "failed"
     skipped = "skipped"
+
+class CoupleStatus(str, Enum):
+    active = "active"
+    inactive = "inactive"
+
+class SettlementStatus(str, Enum):
+    pending = "pending"
+    settled = "settled"
+
+class SavingGoalStatus(str, Enum):
+    active = "active"
+    paused = "paused"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class SavingTransactionType(str, Enum):
+    deposit = "deposit"
+    withdrawal = "withdrawal"
+    interest = "interest"
