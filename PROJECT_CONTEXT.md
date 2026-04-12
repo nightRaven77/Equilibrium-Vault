@@ -1,7 +1,7 @@
 # Finance Tracker — Contexto del Proyecto
 
 ## Descripción
-Aplicación de control de finanzas personales y en pareja. Backend en FastAPI + PostgreSQL vía Supabase.
+Aplicación de control de finanzas personales y en pareja. Backend en FastAPI + PostgreSQL vía Supabase. Frontend en Angular como PWA responsiva.
 
 ---
 
@@ -9,6 +9,11 @@ Aplicación de control de finanzas personales y en pareja. Backend en FastAPI + 
 
 | Capa | Tecnología |
 |------|-----------|
+| Frontend Web | Angular 19+ (Standalone Components) |
+| Estilos | Tailwind CSS v4 + Angular Material |
+| PWA | @angular/pwa (ng add) |
+| HTTP Client | Angular HttpClient + Interceptors JWT |
+| Estado | Angular Signals + Services |
 | Backend API | FastAPI (Python) |
 | Base de datos | PostgreSQL (Supabase) |
 | Auth | Supabase Auth (JWT) |
@@ -316,6 +321,64 @@ Hasta la fecha, se ha completado la construcción de la estructura base y los pr
 4. ✅ **Módulo `cards`**: CRUD de las tarjetas de crédito (implementando soft-delete nativo). Integración de RPC a Supabase para calcular automáticamente la próxima de fecha de corte con un fallback local hecho en Python (basado en librería calendar), y su enlace de registro silencioso del estado de cuenta (`card_statements`).
 5. ✅ **Módulo `recurring`**: Base CRUD para crear planes de suscripción. Utiliza un llamado a RPC para generar un historial (`generate_occurrences`). Incluye el endpoint `/occurrences/{id}/pay` el cual permite cerrar una ocurrencia y simula un registro real e íntegro inyectando automáticamente una transacción hacia "personal_transactions" actualizando saldos bajo un mismo botón. También están soportadas las vistas directas a los futuros pagos con la vista pre-existente.
 
+6. ✅ **Módulo `couples`**: CRUD de vínculos y las operaciones cruzadas: registro de gastos compartidos con porcentajes divididos + acción de liquidación (settlement) completados con pruebas de integración.
+7. ✅ **Módulo `savings`**: CRUD de metas financieras, el histórico de movimientos individuales del ahorro + implementación completada con éxito.
+
 **Por Desarrollar / Siguientes Tareas (⏳):**
-6. ⏳ **Módulo `couples`** — CRUD de vínculos y las operaciones cruzadas: registro de gastos compartidos con porcentajes divididos + acción de liquidación (settlement).
-7. ⏳ **Módulo `savings`** — CRUD de metas financieras, el histórico de movimientos individuales del ahorro + implementación o consulta de proyección de rendimiento vía `apply_periodic_interest`.
+8. ⏳ **Frontend Base (Angular)** — Inicializar aplicación Angular 19+, configurar Tailwind CSS v4, Angular Material, PWA manifest y estructura base de la app.
+
+---
+
+## Frontend — Decisiones de Arquitectura
+
+### Tecnologías confirmadas
+- **Angular 19+** con Standalone Components (sin NgModules)
+- **Tailwind CSS v4** para utilidades de estilo
+- **Angular Material** para componentes UI (forms, dialogs, snackbars)
+- **@angular/pwa** para service worker y manifest
+- **Angular Signals** como mecanismo de estado reactivo (sin NgRx)
+
+### Estructura de carpetas planeada
+```
+src/
+├── app/
+│   ├── core/
+│   │   ├── auth/           # Guard, interceptor JWT, servicio de sesión
+│   │   ├── services/       # ApiService base (HttpClient wrapper)
+│   │   └── models/         # Interfaces TypeScript espejo de los schemas FastAPI
+│   ├── shared/
+│   │   ├── components/     # Componentes reutilizables (cards, badges, empty-state)
+│   │   ├── pipes/          # CurrencyMx, RelativeDate, etc.
+│   │   └── directives/
+│   ├── features/
+│   │   ├── auth/           # Login, registro
+│   │   ├── dashboard/      # Vista principal con resumen
+│   │   ├── personal/       # Transacciones personales
+│   │   ├── cards/          # Tarjetas de crédito y cortes
+│   │   ├── recurring/      # Pagos recurrentes
+│   │   ├── couples/        # Gastos en pareja
+│   │   └── savings/        # Metas de ahorro
+│   └── app.routes.ts       # Lazy loading por feature
+├── assets/
+└── manifest.webmanifest
+```
+
+### Convenciones Angular
+- Todos los componentes son **Standalone** (`standalone: true`)
+- Lazy loading obligatorio por feature route
+- **Signals** para estado local de componentes (`signal()`, `computed()`, `effect()`)
+- **Interceptor JWT**: adjunta el Bearer token de Supabase en cada request a FastAPI
+- **Auth Guard**: redirige a `/login` si no hay sesión activa
+- Formularios con **ReactiveFormsModule** (no template-driven)
+
+### Requisitos PWA
+- Responsive: mobile-first, breakpoints sm/md/lg de Tailwind
+- Service worker con `@angular/pwa` (cache de assets y shell)
+- Manifest con íconos, nombre y `display: standalone`
+- Soporte offline básico: mostrar datos cacheados cuando no hay red
+
+### Comunicación con FastAPI
+- `ApiService` base con métodos genéricos `get<T>`, `post<T>`, `patch<T>`, `delete<T>`
+- Interceptor agrega header `Authorization: Bearer <token>` en cada llamada
+- Manejo de errores centralizado: interceptor de respuesta muestra snackbar en 401/403/500
+- Modelos TypeScript en `core/models/` alineados 1:1 con los schemas Pydantic del backend

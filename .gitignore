@@ -11,3 +11,6 @@ wheels/
 
 #Variable Environment
 .env
+
+#stich_screens
+stitch_screens/
