@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routers import personal, cards, recurring, couples, savings, auth
+from app.api.routers import personal, cards, recurring,couples, savings, auth, categories
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -25,6 +25,7 @@ app.include_router(cards.router, prefix="/api/v1")
 app.include_router(recurring.router, prefix="/api/v1")
 app.include_router(couples.router, prefix="/api/v1")
 app.include_router(savings.router, prefix="/api/v1")
+app.include_router(categories.router, prefix="/api/v1")
 
 @app.get("/api/health", tags=["system"])
 def health_check():

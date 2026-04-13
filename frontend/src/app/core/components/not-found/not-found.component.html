@@ -1,0 +1,114 @@
+<div class="bg-background text-on-surface font-body min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#1C1B1B]">
+<nav class="flex justify-between items-center px-6 py-4 w-full max-w-none">
+<div class="text-xl font-bold tracking-tighter text-[#47EAED] font-headline uppercase">
+                Equilibrium Tech
+            </div>
+<div class="hidden md:flex items-center gap-8 font-headline tracking-wider uppercase text-sm">
+<a class="text-[#E5E2E1] opacity-70 hover:opacity-100 transition-opacity hover:text-[#47EAED]" href="#">Dashboard</a>
+<a class="text-[#E5E2E1] opacity-70 hover:opacity-100 transition-opacity hover:text-[#47EAED]" href="#">Assets</a>
+<a class="text-[#E5E2E1] opacity-70 hover:opacity-100 transition-opacity hover:text-[#47EAED]" href="#">Vaults</a>
+<a class="text-[#E5E2E1] opacity-70 hover:opacity-100 transition-opacity hover:text-[#47EAED]" href="#">Security</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#47EAED] hover:scale-95 active:duration-100 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-[#47EAED] hover:scale-95 active:duration-100 transition-transform">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBoH9gRWClN6oA9ML4PnwCtHBpnUk8UiAhu5iCZbYfMVo5r9u-1uMCQG8VSVqAHp0TbNc5FaPQaaevurHi2IPJSjcsGg3py2yBJUj17JSnoTKxpwZOYRM_gcfHSyyEpupZw7gw7ccOKHXBsMY12x-qVYTaIGNiTsXvK4XiPy3vTc7aifcDFeOp44-B-pbja58f3sTzq2sHJLof6NUZzkdXHXmyxYU5QqWQ9b6TsJHt2n-5bhHwO59uAzGugr0lPHRUx6aYbLslIKzg"/>
+</div>
+</div>
+</nav>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+<!-- Background Accents (Atmospheric Glows) -->
+<div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary-container/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="max-w-2xl w-full text-center space-y-12 relative z-10">
+<!-- Asymmetric Illustration Section -->
+<div class="relative inline-block">
+<!-- Outer Ring Decor -->
+<div class="absolute inset-0 border-[1px] border-primary/20 rounded-full scale-110 animate-pulse"></div>
+<div class="relative w-72 h-72 mx-auto bg-surface-container rounded-full flex items-center justify-center overflow-visible shadow-lg shadow-black/40">
+<!-- The "Vault Not Found" Illustration -->
+<div class="relative">
+<!-- Stylized Robot Character -->
+<div class="w-48 h-48 relative flex items-center justify-center">
+<img alt="Lost Financial Robot" class="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(71,234,237,0.4)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTwrUNIaC6Hb9fUCx3bRNOuKPZ9mvwG8u0TqB1a4vF99cIhtIZiE7mzSeavIZB50uf2y81q00nYsPsezttT2WuAiJE_vf8HcDElp6DfVgf4SoAUgJt2TxLBTmO6KiXUkfH2WtqT8oHBA5B9vMWE-sT2SdWVDDkPOo-TgOe8PWa7Knp0HxWnVoviAj8pgFHR6aJUJtA6Co1g1Ud398SmzP1aqq15d_C8hID6OqeKI4iN-ke_sIsWKb6mLCpbE_93rL4ZBr6HlLrB94t"/>
+</div>
+<!-- Floating Data Particles -->
+<div class="absolute top-0 right-0 w-4 h-4 bg-primary rounded-sm opacity-50 rotate-45"></div>
+<div class="absolute -bottom-4 left-10 w-2 h-2 bg-primary-container rounded-full opacity-70"></div>
+<div class="absolute top-1/2 -left-8 w-6 h-1 bg-outline-variant/40 rounded-full"></div>
+</div>
+</div>
+<!-- 404 Status Badge -->
+<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-surface-container-highest px-6 py-1 border border-primary/30 rounded-lg">
+<span class="font-headline text-xs tracking-widest text-primary uppercase">Sector: 404_VOID</span>
+</div>
+</div>
+<!-- Typography Content -->
+<div class="space-y-4">
+<h1 class="text-4xl md:text-5xl font-headline font-bold tracking-tight text-on-surface">
+                    Vault <span class="text-primary">Not Found</span> (404 Error)
+                </h1>
+<p class="text-on-surface-variant max-w-lg mx-auto font-body leading-relaxed">
+                    It seems the coordinates you entered led to a non-existent sector. Don't worry, your assets are safe in other vaults.
+                </p>
+</div>
+<!-- CTA Cluster -->
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+<!-- Angular RouterLink attached -->
+<button routerLink="/dashboard" class="w-full sm:w-auto bg-primary text-on-primary font-headline font-bold px-8 py-3 rounded-lg hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(71,234,237,0.2)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    Return to Dashboard
+                </button>
+<button class="w-full sm:w-auto bg-surface-container-high text-primary font-headline font-medium px-8 py-3 rounded-lg hover:bg-surface-container-highest transition-colors flex items-center justify-center gap-2 border border-primary/20">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+                    Contact System Support
+                </button>
+</div>
+</div>
+<!-- Technical Metadata Footer Overlay (Subtle) -->
+<div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-40">
+<div class="flex flex-col gap-1">
+<span class="font-label text-[10px] uppercase tracking-widest">Protocol</span>
+<span class="font-headline text-xs">EQ_CORE_v.2.4</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label text-[10px] uppercase tracking-widest">Hash Status</span>
+<span class="font-headline text-xs text-primary">SECURE</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label text-[10px] uppercase tracking-widest">Latency</span>
+<span class="font-headline text-xs">0.04ms</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label text-[10px] uppercase tracking-widest">Cluster</span>
+<span class="font-headline text-xs text-tertiary-container">ALPHA_7</span>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 mt-auto bg-[#131313] border-t border-[#3B4949]/15">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 gap-4 w-full max-w-none">
+<div class="text-[#47EAED] font-bold font-headline tracking-tighter uppercase">
+                Equilibrium Tech
+            </div>
+<div class="flex flex-wrap justify-center gap-6 font-['Space_Grotesk'] text-[10px] tracking-[0.05em] uppercase">
+<a class="text-[#E5E2E1] opacity-50 hover:text-[#47EAED] hover:opacity-100 transition-all" href="#">System Status</a>
+<a class="text-[#E5E2E1] opacity-50 hover:text-[#47EAED] hover:opacity-100 transition-all" href="#">Terms of Service</a>
+<a class="text-[#E5E2E1] opacity-50 hover:text-[#47EAED] hover:opacity-100 transition-all" href="#">Privacy Policy</a>
+<a class="text-[#E5E2E1] opacity-50 hover:text-[#47EAED] hover:opacity-100 transition-all" href="#">Contact Support</a>
+</div>
+<div class="text-[#E5E2E1] opacity-50 font-['Space_Grotesk'] text-[10px] tracking-[0.05em] uppercase">
+                © 2024 Equilibrium Tech. Precision Intelligence.
+            </div>
+</div>
+</footer>
+</div>
