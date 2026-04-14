@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { FinanceService } from '../../core/services/finance.service';
-import { Transaction } from '../../core/models/finance.model';
+import { Transaction, SavingGoalSummary } from '../../core/models/finance.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,6 +19,7 @@ export class DashboardComponent implements OnInit {
   // Signals para enlace de datos con HTML
   public netWorth = signal<number>(0);
   public transactions = signal<Transaction[]>([]);
+  public savings = signal<SavingGoalSummary[]>([]);
   public isLoading = signal<boolean>(true);
 
   ngOnInit() {
@@ -26,7 +27,6 @@ export class DashboardComponent implements OnInit {
   }
 
   fetchDashboardData() {
-    // Pedimos las transacciones personales
     this.financeService.getPersonalTransactions().subscribe({
       next: (data) => {
         this.transactions.set(data);
@@ -43,6 +43,16 @@ export class DashboardComponent implements OnInit {
         console.error('Error cargando la vista de dashboard', err);
         this.isLoading.set(false);
       },
+    });
+
+    // Pedimos las metas de ahorro
+    this.financeService.getSavings().subscribe({
+      next: (data) => {
+        this.savings.set(data);
+      },
+      error: (err) => {
+        console.error('Error cargando los ahorros', err);
+      }
     });
   }
 

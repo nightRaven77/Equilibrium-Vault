@@ -15,7 +15,7 @@
 <span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
 <span>Credit Cards</span>
 </a>
-<a class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]" href="#">
+<a routerLink="/savings" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
 <span class="material-symbols-outlined" data-icon="savings">savings</span>
 <span>Savings</span>
 </a>
@@ -119,7 +119,7 @@
                     <div class="flex justify-between items-end">
                         <div class="flex-1">
                             <p class="text-[10px] font-label text-on-surface-variant uppercase">Credit Limit</p>
-                            <p class="text-2xl font-headline font-bold">{{ card.credit_limit | currency:'USD' }}</p>
+                            <p class="text-2xl font-headline font-bold">{{ card.credit_limit | currency:'MXN' }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[10px] font-label text-on-surface-variant uppercase">Cutoff Day</p>

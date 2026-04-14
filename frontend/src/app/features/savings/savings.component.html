@@ -1,0 +1,161 @@
+<div class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-64 z-50 bg-[#1C1B1B] border-r border-[#3B4949]/15 flex flex-col py-8 font-['Space_Grotesk'] text-sm font-medium tracking-[0.05em] uppercase">
+<div class="px-6 mb-8">
+<h1 class="text-2xl font-bold text-[#47EAED] font-headline tracking-tighter">Equilibrium</h1>
+<p class="font-label text-[10px] tracking-[0.2em] text-[#E5E2E1]/40 uppercase mt-1">Precision Vault</p>
+</div>
+<div class="flex-grow flex flex-col gap-1">
+<a routerLink="/dashboard" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a routerLink="/credit-cards" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+<span>Credit Cards</span>
+</a>
+<!-- Active State: Savings -->
+<a routerLink="/savings" class="flex items-center gap-3 text-[#47EAED] border-l-2 border-[#47EAED] bg-[#201F1F] py-3 px-6 active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+<span>Savings</span>
+</a>
+<a class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span>Budgets</span>
+</a>
+</div>
+<div class="mt-auto px-6 mb-6">
+<button class="w-full py-3 technical-gradient text-on-primary font-bold rounded-lg flex items-center justify-center gap-2 active:scale-95 transition-transform" style="background: linear-gradient(135deg, #47eaed 0%, #00ced1 100%)">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span class="text-xs">Add Transaction</span>
+</button>
+</div>
+</nav>
+
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-40 bg-[#1C1B1B] h-16 flex justify-between items-center px-6 ml-64 transition-colors tracking-wider">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant/50">
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+</span>
+<input class="bg-surface-container-lowest border-none rounded-lg pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-primary transition-all" placeholder="Search goals..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6 pr-64">
+<button class="relative text-[#E5E2E1]/60 hover:text-[#47EAED] transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<div class="flex items-center gap-3 cursor-pointer">
+<div class="text-right">
+<p class="text-xs font-bold text-[#E5E2E1]">ALEX_VOLKOV</p>
+<p class="text-[10px] text-primary">PREMIUM_TIER</p>
+</div>
+<img class="w-10 h-10 rounded-lg object-cover grayscale hover:grayscale-0 transition-all border border-outline-variant/30" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCraJD908iotYTtS-OqrHcDSL3tSKDMFyEUE58lwuMQw4aRGYkLPHrlf2z8slmjFbpi4wcm1mxVYm622UiHETLrUMI4DxdNW3hfzLnE_4kUDbWqkfeMLd-WjpTIEAKjD9LqT7LXo0PGyA-wuLlqibHPxnboIaPm4gYyZz7JA625bIO39pfjXqcBe-bb9mrAvFlST8bif7Iul_uxMr9ZrkN1kimaUSHd-2KLU8V8Nxa9VIINoc0Nr-qBT3r93uTYh0aamTlCQszE26zI"/>
+</div>
+</div>
+</header>
+
+<!-- Main Content -->
+<main class="ml-64 pt-24 pb-12 px-8 min-h-screen">
+<!-- Header Section -->
+<div class="mb-10 flex justify-between items-end">
+<div class="space-y-1">
+<h2 class="text-4xl font-headline font-bold tracking-tighter text-on-surface uppercase">Savings Trajectory</h2>
+<p class="text-on-surface-variant font-label text-sm tracking-widest">ASSET ACCUMULATION &amp; GOAL TRACKING</p>
+</div>
+<div class="flex gap-4">
+<div class="px-4 py-2 bg-surface-container-low border-l-2 border-primary">
+<p class="text-[10px] font-label text-primary uppercase">Total Accumulated</p>
+<p class="text-xl font-headline font-bold">{{ totalSaved() | currency:'USD' }}</p>
+</div>
+<div class="px-4 py-2 bg-surface-container-low border-l-2 border-secondary">
+<p class="text-[10px] font-label text-secondary uppercase">Global Target</p>
+<p class="text-xl font-headline font-bold">{{ totalTarget() | currency:'USD' }}</p>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-8 space-y-6">
+        <div class="flex items-center justify-between border-b border-outline-variant/10 pb-2">
+            <h3 class="font-label text-sm font-bold tracking-widest text-on-surface-variant uppercase flex items-center gap-2">
+                <span class="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                Strategic Objectives
+            </h3>
+            <span class="text-[10px] font-label text-primary/50">{{ savings().length }} ACTIVE OBJECTIVES</span>
+        </div>
+
+        <div class="space-y-4">
+            @if (isLoading()) {
+                <div class="p-8 flex justify-center">
+                    <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
+                </div>
+            } @else if (savings().length === 0) {
+                <div class="p-8 text-center text-on-surface-variant tracking-widest text-sm uppercase opacity-60">
+                    No saving goals found
+                </div>
+            } @else {
+                @for (goal of savings(); track goal.id) {
+                    <!-- Vertical List Item -->
+                    <div class="bg-surface-container-low p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-transparent hover:border-outline-variant/20 transition-all group">
+                        
+                        <div class="flex items-center gap-6">
+                            <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/20 relative" [style.borderColor]="goal.color || '#47EAED'">
+                                <span class="material-symbols-outlined text-[24px]" [style.color]="goal.color || '#47EAED'">{{ goal.icon || 'star' }}</span>
+                            </div>
+                            <div>
+                                <p class="font-body text-base font-semibold text-on-surface uppercase">{{ goal.name }}</p>
+                                <p class="font-label text-[10px] text-on-surface-variant tracking-widest mt-1">STATUS: <span [ngClass]="{'text-primary': goal.status === 'active', 'text-error': goal.status === 'paused'}" class="capitalize">{{ goal.status }}</span></p>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 w-full md:w-auto md:px-8">
+                            <div class="flex justify-between items-end mb-2">
+                                <p class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Progression</p>
+                                <p class="font-body text-xs text-primary font-medium">{{ goal.current_balance | currency:goal.currency }} / {{ goal.target_amount | currency:goal.currency }}</p>
+                            </div>
+                            <div class="h-2 rounded-full bg-surface-container-highest w-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-1000 ease-out relative" 
+                                     [style.width.%]="goal.progress_pct" 
+                                     [style.backgroundColor]="goal.color || '#47EAED'">
+                                     <div class="absolute inset-0 bg-white/20 w-full h-full status-glow"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <p class="font-headline text-lg font-bold">{{ goal.progress_pct | number:'1.1-2' }}%</p>
+                            <p class="font-label text-[10px] uppercase mt-1 tracking-widest" [ngClass]="goal.progress_pct >= 100 ? 'text-primary' : 'text-[#859493]'">{{ goal.progress_pct >= 100 ? 'COMPLETED' : 'IN_PROGRESS' }}</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    
+    <div class="col-span-12 lg:col-span-4 space-y-6">
+        <!-- Global Progression Gauge -->
+        <div class="bg-surface-container-low p-8 rounded-lg text-center space-y-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
+        <p class="font-label text-xs font-bold tracking-[0.2em] text-on-surface-variant uppercase">Global Integrity</p>
+        <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
+        <svg class="w-full h-full -rotate-90 transform" viewbox="0 0 100 100">
+        <circle class="text-surface-container-highest" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+        <circle class="text-primary transition-all duration-1000 ease-out" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" [attr.stroke-dasharray]="'251.2'" [attr.stroke-dashoffset]="251.2 - (251.2 * overallProgress() / 100)" stroke-linecap="round" stroke-width="8"></circle>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-4xl font-headline font-bold tracking-tighter">{{ overallProgress() | number:'1.0-1' }}%</span>
+        <span class="text-[10px] font-label text-primary uppercase">Funded</span>
+        </div>
+        </div>
+        <div class="space-y-4">
+        <p class="text-[11px] leading-relaxed text-on-surface-variant italic">"Your liquidity reservoir is progressing steadily towards global benchmarks."</p>
+        </div>
+        <button class="w-full py-3 bg-primary text-on-primary hover:brightness-110 font-label text-[10px] font-bold tracking-widest transition-colors uppercase rounded-lg">Allocate Funds</button>
+        </div>
+    </div>
+</div>
+</main>
+</div>

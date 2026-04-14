@@ -20,7 +20,7 @@
                     </a>
 </li>
 <li>
-<a class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 font-label text-sm font-medium tracking-[0.05em] uppercase hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]" href="#">
+<a routerLink="/savings" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 font-label text-sm font-medium tracking-[0.05em] uppercase hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
 <span class="material-symbols-outlined" data-icon="savings">savings</span>
                         Savings
                     </a>
@@ -197,33 +197,27 @@
 <div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex flex-col">
 <h3 class="font-headline text-lg font-bold mb-6">Savings Priority</h3>
 <div class="space-y-8 flex-1">
-<div>
-<div class="flex justify-between items-end mb-2">
-<p class="font-label text-[10px] uppercase tracking-wider">New York Estate</p>
-<p class="font-body text-xs text-primary font-medium">$850k / $1.2M</p>
-</div>
-<div class="h-1.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 70%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between items-end mb-2">
-<p class="font-label text-[10px] uppercase tracking-wider">Venture Fund</p>
-<p class="font-body text-xs text-primary font-medium">$120k / $200k</p>
-</div>
-<div class="h-1.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 60%"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between items-end mb-2">
-<p class="font-label text-[10px] uppercase tracking-wider">Tech Upgrade</p>
-<p class="font-body text-xs text-primary font-medium">$18k / $25k</p>
-</div>
-<div class="h-1.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 72%"></div>
-</div>
-</div>
+    @if (isLoading()) {
+        <div class="flex justify-center p-8">
+            <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
+        </div>
+    } @else if (savings().length === 0) {
+        <div class="text-center p-8 text-on-surface-variant font-label text-xs uppercase tracking-widest opacity-60">
+            No active priorities
+        </div>
+    } @else {
+        @for (goal of savings().slice(0, 3); track goal.id) {
+            <div>
+            <div class="flex justify-between items-end mb-2">
+            <p class="font-label text-[10px] uppercase tracking-wider">{{ goal.name }}</p>
+            <p class="font-body text-xs text-primary font-medium">{{ goal.current_balance | currency:goal.currency }} / {{ goal.target_amount | currency:goal.currency }}</p>
+            </div>
+            <div class="h-1.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-1000" [style.width.%]="goal.progress_pct" [style.backgroundColor]="goal.color || '#47EAED'"></div>
+            </div>
+            </div>
+        }
+    }
 </div>
 <button class="w-full mt-10 py-3 rounded-lg border border-outline-variant/50 font-label text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container hover:text-primary transition-all">
                         Configure Goals

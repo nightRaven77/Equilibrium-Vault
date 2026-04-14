@@ -8,6 +8,7 @@ import {
   CoupleBalance,
   CoupleTransaction,
   CreditCard,
+  SavingGoalSummary,
 } from '../models/finance.model';
 
 @Injectable({
@@ -52,5 +53,12 @@ export class FinanceService {
    */
   getCreditCards(): Observable<CreditCard[]> {
     return this.http.get<CreditCard[]>(`${this.apiUrl}/cards/`);
+  }
+
+  /**
+   * Obtiene las metas de ahorro con sumario de progreso
+   */
+  getSavings(): Observable<SavingGoalSummary[]> {
+    return this.http.get<SavingGoalSummary[]>(`${this.apiUrl}/savings/`);
   }
 }

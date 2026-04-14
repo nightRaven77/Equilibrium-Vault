@@ -65,3 +65,21 @@ export interface CardStatement {
   minimum_payment: number;
   status: 'open' | 'closed' | 'paid';
 }
+
+export interface SavingGoalSummary {
+  id: string;
+  user_id: string;
+  name: string;
+  icon?: string | null;
+  color?: string | null;
+  target_amount: number;
+  currency: string;
+  annual_rate_pct: number;
+  target_date?: string | null;
+  status: 'active' | 'paused' | 'completed';
+  current_balance: number;
+  progress_pct: number;
+  remaining?: number | null;
+  movement_count?: number | null;
+  last_movement_date?: string | null;
+}
