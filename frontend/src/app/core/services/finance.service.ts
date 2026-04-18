@@ -7,8 +7,16 @@ import {
   MonthlySummary,
   CoupleBalance,
   CoupleTransaction,
+  Couple,
   CreditCard,
   SavingGoalSummary,
+  Category,
+  TransactionCreate,
+  CoupleTransactionCreate,
+  CreditCardCreate,
+  CreditCardUpdate,
+  CardStatement,
+  InstallmentPlan,
 } from '../models/finance.model';
 
 @Injectable({
@@ -17,6 +25,13 @@ import {
 export class FinanceService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+
+  /**
+   * Obtiene los vínculos de pareja del usuario
+   */
+  getCouples(): Observable<Couple[]> {
+    return this.http.get<Couple[]>(`${this.apiUrl}/couples/`);
+  }
 
   /**
    * Obtiene la lista de transacciones personales
@@ -56,9 +71,81 @@ export class FinanceService {
   }
 
   /**
+   * Crea una nueva tarjeta de crédito
+   */
+  createCreditCard(card: CreditCardCreate): Observable<CreditCard> {
+    return this.http.post<CreditCard>(`${this.apiUrl}/cards/`, card);
+  }
+
+  /**
+   * Actualiza los datos de una tarjeta existente
+   */
+  updateCreditCard(id: string, card: CreditCardUpdate): Observable<CreditCard> {
+    return this.http.patch<CreditCard>(`${this.apiUrl}/cards/${id}`, card);
+  }
+
+  /**
+   * Elimina (soft-delete) una tarjeta de crédito
+   */
+  deleteCreditCard(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cards/${id}`);
+  }
+
+  /**
+   * Obtiene los estados de cuenta (historial) de una tarjeta
+   */
+  getCardStatements(cardId: string): Observable<CardStatement[]> {
+    return this.http.get<CardStatement[]>(`${this.apiUrl}/cards/${cardId}/statements`);
+  }
+
+  /**
    * Obtiene las metas de ahorro con sumario de progreso
    */
   getSavings(): Observable<SavingGoalSummary[]> {
     return this.http.get<SavingGoalSummary[]>(`${this.apiUrl}/savings/`);
+  }
+
+  /**
+   * Obtiene las categorías del usuario
+   */
+  getCategories(categoryType: string): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.apiUrl}/categories/${categoryType}`);
+  }
+
+  /**
+   * Crea una transacción personal
+   */
+  createTransaction(data: TransactionCreate): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.apiUrl}/personal/`, data);
+  }
+
+  /**
+   * Crea una transacción compartida para una pareja
+   */
+  createCoupleTransaction(
+    coupleId: string,
+    data: CoupleTransactionCreate,
+  ): Observable<CoupleTransaction> {
+    return this.http.post<CoupleTransaction>(
+      `${this.apiUrl}/couples/${coupleId}/transactions`,
+      data,
+    );
+  }
+
+  /**
+   * Obtiene todos los planes de MSI del usuario
+   */
+  getInstallmentPlans(): Observable<InstallmentPlan[]> {
+    return this.http.get<InstallmentPlan[]>(`${this.apiUrl}/personal/installments`);
+  }
+
+  /**
+   * Cancela un plan de MSI
+   */
+  cancelInstallmentPlan(planId: string): Observable<InstallmentPlan> {
+    return this.http.patch<InstallmentPlan>(
+      `${this.apiUrl}/personal/installments/${planId}/cancel`,
+      {},
+    );
   }
 }

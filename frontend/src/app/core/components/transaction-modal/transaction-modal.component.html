@@ -1,0 +1,228 @@
+@if (modalService.isTransactionModalOpen()) {
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" (click)="close()"></div>
+
+  <!-- Modal Container -->
+  <div
+    class="relative bg-surface-container-low border border-outline-variant/30 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <!-- Header -->
+    <div class="px-6 pt-6 pb-4 flex justify-between items-center border-b border-outline-variant/10">
+      <div>
+        <h3 class="text-xl font-headline font-bold text-on-surface tracking-tight uppercase">New Log Entry</h3>
+        <p class="font-label text-[10px] text-primary tracking-[0.2em] uppercase mt-0.5">VAULT_TRANSACTION_INIT</p>
+      </div>
+      <button (click)="close()" class="text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Form Body -->
+    <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="p-6 space-y-5 max-h-[80vh] overflow-y-auto custom-scrollbar">
+      
+      <!-- Amount & Type -->
+      <div class="space-y-4">
+        <div class="flex bg-surface-container-highest p-1 rounded-lg border border-outline-variant/10">
+          <button type="button" 
+            (click)="transactionForm.patchValue({type: 'expense'})"
+            [class.bg-primary]="transactionForm.get('type')?.value === 'expense'"
+            [class.text-on-primary]="transactionForm.get('type')?.value === 'expense'"
+            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-all">
+            Expense
+          </button>
+          <button type="button" 
+            (click)="transactionForm.patchValue({type: 'income'})"
+            [class.bg-primary]="transactionForm.get('type')?.value === 'income'"
+            [class.text-on-primary]="transactionForm.get('type')?.value === 'income'"
+            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-all">
+            Income
+          </button>
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em] px-1">Amount Allocation</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-headline font-bold text-primary">$</span>
+            <input type="number" formControlName="amount" placeholder="0.00"
+              class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-xl py-4 pl-10 pr-4 text-3xl font-headline font-bold text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-on-surface-variant/20"
+              [class.border-error]="transactionForm.get('amount')?.touched && transactionForm.get('amount')?.invalid" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-1">
+        <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em] px-1">Ledger Description</label>
+        <input type="text" formControlName="description" placeholder="e.g. AWS Cloud Infrastructure"
+          class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+          [class.border-error]="transactionForm.get('description')?.touched && transactionForm.get('description')?.invalid" />
+      </div>
+
+      <!-- Category & Date -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-1">
+          <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em] px-1">Category</label>
+          <select formControlName="category_id"
+            class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none cursor-pointer">
+            <option value="" disabled>Select...</option>
+            @for (cat of filteredCategories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em] px-1">Record Date</label>
+          <input type="date" formControlName="transaction_date"
+            class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" />
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="space-y-3 p-4 bg-surface-container-low/50 rounded-xl border border-outline-variant/10">
+        <div class="flex items-center justify-between">
+            <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em]">Settlement Method</label>
+            <div class="flex gap-2">
+                @for (method of ['credit_card', 'debit_card', 'cash', 'transfer', 'digital_wallet']; track method) {
+                    <button type="button" 
+                        (click)="transactionForm.get('payment_method')?.setValue(method)"
+                        [disabled]="transactionForm.get('type')?.value === 'income' && method === 'credit_card'"
+                        [class.text-primary]="transactionForm.get('payment_method')?.value === method"
+                        [class.bg-primary/10]="transactionForm.get('payment_method')?.value === method"
+                        [class.opacity-20]="transactionForm.get('type')?.value === 'income' && method === 'credit_card'"
+                        [class.cursor-not-allowed]="transactionForm.get('type')?.value === 'income' && method === 'credit_card'"
+                        class="p-2 rounded-lg border border-outline-variant/10 hover:bg-surface-container-highest transition-all tooltip-custom"
+                        [attr.data-tooltip]="method === 'cash' ? 'Efectivo': method === 'debit_card' ? 'Tarjeta de débito': method === 'credit_card' ? 'Tarjeta de crédito': method === 'transfer' ? 'Transferencia': 'Billetera digital'">
+                        <span class="material-symbols-outlined text-sm">
+                            {{ method === 'cash' ? 'payments' : method === 'debit_card' ? 'account_balance' : method === 'credit_card' ? 'credit_card' : method === 'transfer' ? 'send_money' : 'wallet' }}
+                        </span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Conditional Credit Card -->
+        @if (transactionForm.get('payment_method')?.value === 'credit_card') {
+            <div class="space-y-3 animate-in slide-in-from-top-2 duration-200">
+                <select formControlName="credit_card_id"
+                    class="w-full bg-surface-container-highest border border-primary/30 rounded-lg py-2.5 px-4 text-xs font-medium focus:ring-1 focus:ring-primary transition-all">
+                    <option [value]="null" disabled>Select target card...</option>
+                    @for (card of creditCards(); track card.id) {
+                        <option [value]="card.id">{{ card.bank_name }} ({{ card.last_four }})</option>
+                    }
+                </select>
+
+                <!-- MSI Toggle -->
+                <div class="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/5">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-lg">calendar_month</span>
+                    <span class="font-label text-[10px] font-bold text-on-surface uppercase">Gasto Diferido (MSI)</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="is_installment" class="sr-only peer">
+                    <div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:after:bg-on-primary"></div>
+                  </label>
+                </div>
+
+                <!-- MSI Months Selector & Preview -->
+                @if (transactionForm.get('is_installment')?.value) {
+                  <div class="grid grid-cols-2 gap-3 p-3 rounded-lg border border-outline-variant/10 bg-surface-container-low animate-in zoom-in-95 duration-200">
+                    <div class="space-y-1">
+                      <label class="font-label text-[8px] text-on-surface-variant uppercase px-1">Plazo (Meses)</label>
+                      <select formControlName="installment_months" 
+                        class="w-full bg-surface-container-highest border-none rounded py-2 px-2 text-xs font-bold text-primary focus:ring-1 focus:ring-primary">
+                        @for (m of [3, 6, 9, 12, 18, 24, 36, 48]; track m) {
+                          <option [value]="m">{{ m }} Mensualidades</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="space-y-1 flex flex-col justify-end items-end">
+                      <p class="font-label text-[8px] text-on-surface-variant uppercase px-1">Pago Mensual</p>
+                      <p class="text-sm font-headline font-bold text-on-surface">
+                        {{ monthlyInstallment() | currency }}
+                      </p>
+                    </div>
+                  </div>
+                }
+            </div>
+        }
+      </div>
+
+      <!-- Shared Entry Toggle -->
+      <div class="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10 transition-all"
+           [class.bg-primary/10]="transactionForm.get('is_shared')?.value"
+           [class.opacity-40]="transactionForm.get('type')?.value === 'income'">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary" [class.animate-pulse]="transactionForm.get('is_shared')?.value">group</span>
+          <div>
+            <p class="font-label text-[10px] font-bold text-on-surface uppercase">Shared Entry</p>
+            <p class="text-[8px] font-label text-on-surface-variant uppercase tracking-tighter">
+              {{ transactionForm.get('type')?.value === 'income' ? 'Not available for income' : 'Split with partner' }}
+            </p>
+          </div>
+        </div>
+        <label class="relative inline-flex items-center" [class.cursor-pointer]="transactionForm.get('type')?.value !== 'income'">
+          <input type="checkbox" formControlName="is_shared" class="sr-only peer" [attr.disabled]="transactionForm.get('type')?.value === 'income' ? true : null">
+          <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-checked:after:bg-on-primary"></div>
+        </label>
+      </div>
+
+      <!-- Conditional Shared Options -->
+      @if (transactionForm.get('is_shared')?.value) {
+        <div class="space-y-4 p-4 border border-primary/20 rounded-xl bg-primary/5 animate-in zoom-in-95 duration-200">
+            <div class="space-y-1">
+                <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em]">Select Couple Profile</label>
+                <select formControlName="couple_id" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg py-2 px-3 text-xs">
+                    @for (couple of couples(); track couple.id) {
+                        <option [value]="couple.id">{{ couple.name || 'Joint Vault' }}</option>
+                    }
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="font-label text-[8px] text-on-surface-variant uppercase">Your Share %</label>
+                    <input type="number" formControlName="user1_share_pct" class="w-full bg-surface-container-highest border-none rounded py-1 px-2 text-xs text-center border-b-2 border-primary" />
+                </div>
+                <div class="space-y-1">
+                    <label class="font-label text-[8px] text-on-surface-variant uppercase">Partner Share %</label>
+                    <input type="number" formControlName="user2_share_pct" class="w-full bg-surface-container-highest border-none rounded py-1 px-2 text-xs text-center" />
+                </div>
+            </div>
+        </div>
+      }
+
+      <!-- Submit -->
+      <div class="pt-4">
+        <button type="submit" [disabled]="transactionForm.invalid || isLoading()"
+          class="w-full py-4 bg-primary text-on-primary font-label text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+          @if (isLoading()) {
+            <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-on-primary"></span>
+            Authenticating...
+          } @else {
+            {{ transactionForm.get('type')?.value === 'income' ? 'Record Income' : 'Authorize Transaction' }}
+          }
+        </button>
+        <p class="text-center text-[9px] font-label text-on-surface-variant/50 uppercase tracking-widest mt-4">
+          Securing integrity with end-to-end vault encryption
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<style>
+/* Custom scrollbar for a sleeker look */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(71, 234, 237, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 234, 237, 0.3);
+}
+</style>

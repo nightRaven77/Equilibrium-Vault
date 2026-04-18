@@ -1,17 +1,26 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FinanceService } from '../../core/services/finance.service';
+import { RefreshService } from '../../core/services/refresh.service';
 import { SavingGoalSummary } from '../../core/models/finance.model';
 
 @Component({
   selector: 'app-savings',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, RouterLink],
+  imports: [CommonModule, CurrencyPipe],
   templateUrl: './savings.component.html',
 })
 export class SavingsComponent implements OnInit {
   private financeService = inject(FinanceService);
+  private refreshService = inject(RefreshService);
+
+  constructor() {
+    effect(() => {
+      if (this.refreshService.refreshTrigger() > 0) {
+        this.fetchSavings();
+      }
+    });
+  }
 
   public savings = signal<SavingGoalSummary[]>([]);
   public isLoading = signal<boolean>(true);
@@ -32,6 +41,11 @@ export class SavingsComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.fetchSavings();
+  }
+
+  fetchSavings() {
+    this.isLoading.set(true);
     this.financeService.getSavings().subscribe({
       next: (data) => {
         this.savings.set(data);

@@ -9,10 +9,10 @@ from app.api.dependencies.auth import get_current_user_supplier
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
-@router.get("/", response_model=List[CategoryResponse])
-def get_categories(supabase: Client = Depends(get_current_user_supplier)):
+@router.get("/{type}", response_model=List[CategoryResponse])
+def get_categories(type: str, supabase: Client = Depends(get_current_user_supplier)):
     """
     Obtiene todas las categorías del usuario autenticado.
     """
-    response = supabase.table("categories").select("*").execute()
+    response = supabase.table("categories").select("*").eq("type",type).execute()
     return response.data

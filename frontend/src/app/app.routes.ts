@@ -5,27 +5,32 @@ import { authGuard } from './core/guards/auth.guard';
 import { NotFoundComponent } from './core/components/not-found/not-found.component';
 import { CreditCardsComponent } from './features/credit-cards/credit-cards.component';
 import { SavingsComponent } from './features/savings/savings.component';
+import { CouplesComponent } from './features/couples/couples.component';
+import { LayoutComponent } from './core/components/layout/layout.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
+  // 1. Redirección inicial limpia
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+
+  // 2. Ruta pública de acceso
   { path: 'auth/login', component: LoginComponent },
+
+  // 3. Cascarón principal protegido (Layout + Sidebar + Topbar)
   {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [authGuard], // <-- Aquí aplicamos el Guardián a esta ruta
-  },
-  {
-    path: 'credit-cards',
-    component: CreditCardsComponent,
+    path: '',
+    component: LayoutComponent,
     canActivate: [authGuard],
+    children: [
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'credit-cards', component: CreditCardsComponent },
+      { path: 'savings', component: SavingsComponent },
+      { path: 'couples', component: CouplesComponent },
+      
+      // Si el usuario está logueado pero la ruta no existe, la ve DENTRO del layout
+      { path: '**', component: NotFoundComponent },
+    ],
   },
-  {
-    path: 'savings',
-    component: SavingsComponent,
-    canActivate: [authGuard],
-  },
-  {
-    path: '**',
-    component: NotFoundComponent
-  }
+
+  // 4. Catch-all de seguridad para usuarios no logueados
+  { path: '**', redirectTo: '/auth/login' },
 ];

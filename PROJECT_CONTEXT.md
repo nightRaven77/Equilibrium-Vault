@@ -323,9 +323,17 @@ Hasta la fecha, se ha completado la construcción de la estructura base y los pr
 
 6. ✅ **Módulo `couples`**: CRUD de vínculos y las operaciones cruzadas: registro de gastos compartidos con porcentajes divididos + acción de liquidación (settlement) completados con pruebas de integración.
 7. ✅ **Módulo `savings`**: CRUD de metas financieras, el histórico de movimientos individuales del ahorro + implementación completada con éxito.
+8. ✅ **Soporte MSI (Meses Sin Intereses)**: Implementación de lógica de división de transacciones (Madre/Hijas) en backend (Service/Router) y frontend (Modal reactivo), incluyendo cálculo preciso de fechas de cargo.
+9. ✅ **Módulo `cards` Frontend**: Rediseño premium con "Obsidian Glassmorphism", gestión de utilización de crédito, visualización de estados de cuenta y CRUD completo de tarjetas.
+10. ✅ **Sincronización Real-time**: Bus de eventos basado en Angular Signals (`RefreshService`) para coordinar la actualización de datos entre módulos tras cualquier movimiento.
+
+11. ✅ **Frontend Base (Angular)** — Inicialización completada, estructura modular, Tailwind v4 configurado y sistema de diseño "Equilibrium Obsidian" establecido.
 
 **Por Desarrollar / Siguientes Tareas (⏳):**
-8. ⏳ **Frontend Base (Angular)** — Inicializar aplicación Angular 19+, configurar Tailwind CSS v4, Angular Material, PWA manifest y estructura base de la app.
+12. ⏳ **Módulo Recurrentes (Suscripciones)** — Implementar la visualización y gestión de pagos recurrentes en el frontend.
+13. ⏳ **Calendario de Pagos** — Nueva vista para visualizar el impacto futuro de los MSI y pagos recurrentes en una línea de tiempo.
+14. ⏳ **PWA (Configuración Final)** — Refinar el service worker y la instalación offline para dispositivos móviles.
+15. ⏳ **Dashboard Analytics** — Gráficas avanzadas de flujo de caja y tendencias de gasto.
 
 ---
 

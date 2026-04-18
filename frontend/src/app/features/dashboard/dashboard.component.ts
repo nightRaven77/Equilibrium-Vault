@@ -1,20 +1,27 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, effect } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
 import { FinanceService } from '../../core/services/finance.service';
+import { RefreshService } from '../../core/services/refresh.service';
 import { Transaction, SavingGoalSummary } from '../../core/models/finance.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, RouterLink],
+  imports: [CommonModule, CurrencyPipe, DatePipe],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  private authService = inject(AuthService);
   private financeService = inject(FinanceService);
-  private router = inject(Router);
+  private refreshService = inject(RefreshService);
+
+  constructor() {
+    // Reacciona a cambios globales en los datos
+    effect(() => {
+      if (this.refreshService.refreshTrigger() > 0) {
+        this.fetchDashboardData();
+      }
+    });
+  }
 
   // Signals para enlace de datos con HTML
   public netWorth = signal<number>(0);
@@ -52,12 +59,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error cargando los ahorros', err);
-      }
+      },
     });
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/auth/login']);
   }
 }
