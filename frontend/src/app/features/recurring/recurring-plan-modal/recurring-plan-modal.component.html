@@ -1,0 +1,152 @@
+@if (isOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300 ease-out" 
+         (click)="close()"></div>
+         
+    <!-- Modal Panel -->
+    <div class="relative w-full max-w-md bg-surface-container-low border border-outline-variant/30 rounded-3xl shadow-2xl p-6 md:p-8 animation-slide-up transform transition-all duration-300 ease-out z-10 mx-4 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Gradient Aura -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-light text-white tracking-tight">
+          {{ isEditing() ? 'Editar Suscripción' : 'Nueva Suscripción' }}
+        </h2>
+        <button (click)="close()" class="p-2 -mr-2 rounded-full hover:bg-white/10 text-on-surface-variant transition-colors group">
+          <span class="material-symbols-outlined text-[24px] group-hover:rotate-90 transition-transform">close</span>
+        </button>
+      </div>
+
+      <form [formGroup]="planForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+
+        <!-- Block 1: Basic Info -->
+        <div class="space-y-4">
+          <div class="flex flex-col">
+            <label class="text-sm font-medium text-on-surface-variant mb-1">Nombre del Servicio</label>
+            <input type="text" formControlName="name" placeholder="Ej. Netflix, Gimnasio" required autocomplete="off"
+                   class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white placeholder-on-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+            @if (planForm.get('name')?.hasError('required') && planForm.get('name')?.touched) {
+              <p class="text-xs text-error mt-1">El nombre es obligatorio.</p>
+            }
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-on-surface-variant mb-1">Costo ($)</label>
+              <input type="number" formControlName="amount" required step="0.01" min="0"
+                     class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-on-surface-variant mb-1">Categoría</label>
+              <select formControlName="category_id" required
+                      class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+                <option value="" disabled selected>Selecciona</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Block 2: Recurrence configuration -->
+        <h3 class="text-sm font-medium text-primary mt-2 flex items-center justify-between">
+          Frecuencia y Fecha
+          <span class="material-symbols-outlined text-[16px]">sync</span>
+        </h3>
+        <div class="bg-surface-container-lowest/30 p-4 rounded-2xl border border-white/5 space-y-4">
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-on-surface-variant mb-1">Frecuencia</label>
+              <select formControlName="frequency" required
+                      class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+                <option value="weekly">Semanal</option>
+                <option value="biweekly">Quincenal</option>
+                <option value="monthly">Mensual</option>
+                <option value="yearly">Anual</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-on-surface-variant mb-1">Día de cobro</label>
+              <input type="number" formControlName="day_of_period" min="1" max="31"
+                     class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+            </div>
+          </div>
+
+          <div class="flex flex-col">
+            <label class="text-sm font-medium text-on-surface-variant mb-1">Fecha de inicio activa</label>
+            <input type="date" formControlName="start_date" required
+                   class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+          </div>
+        </div>
+
+        <!-- Block 3: Payment details -->
+        <h3 class="text-sm font-medium text-primary mt-2">Medio de Pago</h3>
+        <div class="space-y-4">
+          <div class="flex flex-col">
+            <label class="text-sm font-medium text-on-surface-variant mb-1">Método</label>
+            <select formControlName="payment_method" required
+                    class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+              <option value="credit_card">Tarjeta de Crédito</option>
+              <option value="debit_card">Tarjeta de Débito</option>
+              <option value="transfer">Transferencia / Domiciliación</option>
+            </select>
+          </div>
+
+          <!-- Si es Tarjeta de Crédito, pedir cuál -->
+          @if (planForm.get('payment_method')?.value === 'credit_card') {
+            <div class="flex flex-col animation-fade-in">
+              <label class="text-sm font-medium text-on-surface-variant mb-1">Selecciona tu Tarjeta</label>
+              <select formControlName="credit_card_id"
+                      class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+                <option [ngValue]="null">-- Seleccionar Tarjeta --</option>
+                @for (card of creditCards(); track card.id) {
+                  <option [value]="card.id">{{ card.alias || card.bank_name }} ({{ card.last_four }})</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex justify-between items-center mt-6">
+          <div class="flex gap-2">
+             @if (isEditing()) {
+              <button type="button" 
+                      (click)="deletePlan()"
+                      [disabled]="isSaving()"
+                      class="px-4 py-2 rounded-full border border-error/50 text-error hover:bg-error/10 font-medium transition-colors">
+                Eliminar
+              </button>
+             }
+          </div>
+
+          <div class="flex gap-3">
+            <button type="button" 
+                    (click)="close()"
+                    class="px-5 py-2.5 rounded-full text-on-surface hover:bg-white/10 font-medium transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" 
+                    [disabled]="planForm.invalid || isSaving()"
+                    class="px-6 py-2.5 rounded-full bg-primary text-on-primary font-medium hover:bg-primary-container disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+              @if (isSaving()) {
+                <span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+                Guardando...
+              } @else {
+                Guardar
+              }
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

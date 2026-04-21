@@ -1,0 +1,65 @@
+@if (isOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300 ease-out" 
+         (click)="close()"></div>
+         
+    <!-- Modal Panel -->
+    <div class="relative w-full max-w-sm bg-surface-container border border-outline-variant/30 rounded-3xl shadow-2xl p-6 md:p-8 animation-slide-up transform transition-all duration-300 ease-out z-10 mx-4">
+      
+      <!-- Gradient Aura -->
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-tertiary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-medium text-white tracking-tight flex items-center gap-2">
+          <span class="material-symbols-outlined text-tertiary">check_circle</span>
+          Confirmar Pago
+        </h2>
+        <button (click)="close()" class="p-2 -mr-2 rounded-full hover:bg-white/10 text-on-surface-variant transition-colors group">
+          <span class="material-symbols-outlined text-[24px] group-hover:rotate-90 transition-transform">close</span>
+        </button>
+      </div>
+
+      <p class="text-sm text-on-surface-variant mb-6">
+        Estás a punto de marcar esta suscripción como pagada para este periodo. ¿El monto cobrado fue diferente al original?
+      </p>
+
+      <form [formGroup]="payForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-on-surface-variant mb-1">Monto Real (Opcional)</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+            <input type="number" formControlName="amount_override" placeholder="Dejar vacío si fue el mismo" step="0.01" min="0"
+                 class="w-full bg-surface border border-outline-variant/30 rounded-xl pl-8 pr-4 py-3 text-white placeholder-on-surface-variant/50 focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors">
+          </div>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-on-surface-variant mb-1">Notas adicionales (Opcional)</label>
+          <input type="text" formControlName="notes"
+                 class="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 text-white focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors">
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex justify-end gap-3 mt-4">
+          <button type="button" 
+                  (click)="close()"
+                  class="px-5 py-2.5 rounded-full text-on-surface hover:bg-white/10 font-medium transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" 
+                  [disabled]="payForm.invalid || isSaving()"
+                  class="px-6 py-2.5 rounded-full bg-tertiary text-on-tertiary font-medium hover:bg-tertiary-container disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-tertiary/20 flex items-center gap-2">
+            @if (isSaving()) {
+              <span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+            }
+            Confirmar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

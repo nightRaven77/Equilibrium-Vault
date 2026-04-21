@@ -38,4 +38,38 @@ export class ModalService {
     this._isCardModalOpen.set(false);
     this._selectedCardId.set(null);
   }
+
+  // --- Recurring Plan Modal ---
+  private _isRecurringPlanModalOpen = signal<boolean>(false);
+  private _selectedRecurringPlanId = signal<string | null>(null);
+
+  public isRecurringPlanModalOpen = this._isRecurringPlanModalOpen.asReadonly();
+  public selectedRecurringPlanId = this._selectedRecurringPlanId.asReadonly();
+
+  openRecurringPlanModal(planId: string | null = null) {
+    this._selectedRecurringPlanId.set(planId);
+    this._isRecurringPlanModalOpen.set(true);
+  }
+
+  closeRecurringPlanModal() {
+    this._isRecurringPlanModalOpen.set(false);
+    this._selectedRecurringPlanId.set(null);
+  }
+
+  // --- Occurrence Pay Modal ---
+  private _isOccurrencePayModalOpen = signal<boolean>(false);
+  private _selectedOccurrenceId = signal<string | null>(null);
+
+  public isOccurrencePayModalOpen = this._isOccurrencePayModalOpen.asReadonly();
+  public selectedOccurrenceId = this._selectedOccurrenceId.asReadonly();
+
+  openOccurrencePayModal(occurrenceId: string) {
+    this._selectedOccurrenceId.set(occurrenceId);
+    this._isOccurrencePayModalOpen.set(true);
+  }
+
+  closeOccurrencePayModal() {
+    this._isOccurrencePayModalOpen.set(false);
+    this._selectedOccurrenceId.set(null);
+  }
 }

@@ -6,6 +6,7 @@ import { NotFoundComponent } from './core/components/not-found/not-found.compone
 import { CreditCardsComponent } from './features/credit-cards/credit-cards.component';
 import { SavingsComponent } from './features/savings/savings.component';
 import { CouplesComponent } from './features/couples/couples.component';
+import { RecurringComponent } from './features/recurring/recurring.component';
 import { LayoutComponent } from './core/components/layout/layout.component';
 
 export const routes: Routes = [
@@ -25,6 +26,7 @@ export const routes: Routes = [
       { path: 'credit-cards', component: CreditCardsComponent },
       { path: 'savings', component: SavingsComponent },
       { path: 'couples', component: CouplesComponent },
+      { path: 'recurring', component: RecurringComponent },
       
       // Si el usuario está logueado pero la ruta no existe, la ve DENTRO del layout
       { path: '**', component: NotFoundComponent },

@@ -165,3 +165,80 @@ export interface SavingGoalSummary {
   movement_count?: number | null;
   last_movement_date?: string | null;
 }
+
+export interface RecurringPayment {
+  id: string;
+  user_id: string;
+  category_id: string;
+  credit_card_id?: string | null;
+  name: string;
+  description?: string | null;
+  amount: number;
+  currency: string;
+  payment_method: string;
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date: string;
+  end_date?: string | null;
+  day_of_period: number;
+  reminder_days_before: number;
+  is_active: boolean;
+}
+
+export interface RecurringPaymentCreate {
+  category_id: string;
+  credit_card_id?: string | null;
+  name: string;
+  description?: string | null;
+  amount: number;
+  currency?: string;
+  payment_method: string;
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date: string;
+  end_date?: string | null;
+  day_of_period: number;
+  reminder_days_before?: number;
+}
+
+export interface RecurringPaymentUpdate {
+  category_id?: string;
+  credit_card_id?: string | null;
+  name?: string;
+  description?: string | null;
+  amount?: number;
+  currency?: string;
+  payment_method?: string;
+  frequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date?: string;
+  end_date?: string | null;
+  day_of_period?: number;
+  reminder_days_before?: number;
+  is_active?: boolean;
+}
+
+export interface Occurrence {
+  id: string;
+  recurring_payment_id: string;
+  scheduled_date: string;
+  status: 'pending' | 'paid' | 'failed' | 'skipped';
+  amount_override?: number | null;
+  actual_transaction_id?: string | null;
+  notes?: string | null;
+}
+
+export interface OccurrencePayRequest {
+  amount_override?: number | null;
+  notes?: string | null;
+}
+
+export interface UpcomingPayment {
+  occurrence_id: string;
+  recurring_payment_id: string;
+  plan_name: string;
+  amount: number;
+  scheduled_date: string;
+  status: 'pending' | 'paid' | 'failed' | 'skipped';
+  category_id?: string;
+  category_name?: string;
+  category_icon?: string;
+  category_color?: string;
+}
