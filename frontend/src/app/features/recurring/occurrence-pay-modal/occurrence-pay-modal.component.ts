@@ -21,9 +21,17 @@ export class OccurrencePayModalComponent {
   private refreshService = inject(RefreshService);
 
   public isOpen = this.modalService.isOccurrencePayModalOpen;
-  private occurrenceId = this.modalService.selectedOccurrenceId;
+  public payment = this.modalService.selectedUpcomingPayment;
 
   public isSaving = signal<boolean>(false);
+
+  // Brand logos mapping (same as in dashboard for consistency)
+  private readonly brandLogos: Record<string, string> = {
+    netflix: 'netflix', spotify: 'spotify', apple: 'apple', amazon: 'amazon',
+    youtube: 'youtube', disney: 'disney', hbo: 'hbo', xbox: 'xbox',
+    playstation: 'playstation', nintendo: 'nintendo', crunchyroll: 'crunchyroll',
+    claude: 'claude', copilot: 'githubcopilot', google: 'googlegemini',
+  };
 
   public payForm = this.fb.group({
     amount_override: [''],
@@ -43,9 +51,18 @@ export class OccurrencePayModalComponent {
     this.modalService.closeOccurrencePayModal();
   }
 
+  getBrandLogo(name: string): string | null {
+    if (!name) return null;
+    const lowerName = name.toLowerCase();
+    for (const key in this.brandLogos) {
+      if (lowerName.includes(key)) return key;
+    }
+    return null;
+  }
+
   onSubmit() {
-    const id = this.occurrenceId();
-    if (!id || this.payForm.invalid) return;
+    const paymentData = this.payment();
+    if (!paymentData || this.payForm.invalid) return;
 
     this.isSaving.set(true);
     const formValue = this.payForm.value;
@@ -55,7 +72,7 @@ export class OccurrencePayModalComponent {
       notes: formValue.notes || null
     };
 
-    this.recurringService.payOccurrence(id, req).subscribe({
+    this.recurringService.payOccurrence(paymentData.occurrence_id, req).subscribe({
       next: () => {
         this.refreshService.triggerRefresh();
         this.isSaving.set(false);

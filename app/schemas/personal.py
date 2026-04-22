@@ -57,10 +57,12 @@ class TransactionResponse(TransactionBase):
 
 
 class MonthlySummaryRead(BaseModel):
-    year_month: str # e.g. "2024-04"
-    category_id: UUID
-    category_name: str
+    month: str | date
+    category: str
+    category_color: str | None = None
+    category_icon: str | None = None
     type: TransactionType
+    transaction_count: int
     total_amount: Decimal
 
     model_config = ConfigDict(from_attributes=True)

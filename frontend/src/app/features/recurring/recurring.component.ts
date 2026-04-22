@@ -6,6 +6,7 @@ import { ModalService } from '../../core/services/modal.service';
 import { RecurringPayment, UpcomingPayment } from '../../core/models/finance.model';
 import { RecurringPlanModalComponent } from './recurring-plan-modal/recurring-plan-modal.component';
 import { OccurrencePayModalComponent } from './occurrence-pay-modal/occurrence-pay-modal.component';
+import { RecurringHistoryModalComponent } from './recurring-history-modal/recurring-history-modal.component';
 
 @Component({
   selector: 'app-recurring',
@@ -16,6 +17,7 @@ import { OccurrencePayModalComponent } from './occurrence-pay-modal/occurrence-p
     DatePipe,
     RecurringPlanModalComponent,
     OccurrencePayModalComponent,
+    RecurringHistoryModalComponent,
   ],
   templateUrl: './recurring.component.html',
 })
@@ -98,15 +100,18 @@ export class RecurringComponent implements OnInit {
     this.modalService.openRecurringPlanModal(id);
   }
 
-  payOccurrence(occurrenceId: string): void {
-    this.modalService.openOccurrencePayModal(occurrenceId);
+  openHistoryModal(id: string): void {
+    this.modalService.openRecurringHistoryModal(id);
+  }
+
+  payOccurrence(payment: UpcomingPayment): void {
+    this.modalService.openOccurrencePayModal(payment);
   }
 
   getBrandLogo(name: string): string | null {
     const lowerName = name.toLowerCase();
     for (const key in this.brandLogos) {
       if (lowerName.includes(key)) {
-        console.log(lowerName.includes(key));
         // We'll map this to an image source or css class.
         // Assuming we might have assets or we can just use simple external logos for now if we don't have local assets.
         // For premium feel, since it's a dynamic app, we can use simple known URLs or SVG icons.

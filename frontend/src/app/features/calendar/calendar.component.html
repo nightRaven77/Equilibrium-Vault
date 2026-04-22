@@ -1,0 +1,131 @@
+<div class="px-4 pb-12 max-w-4xl mx-auto animation-fade-in space-y-8 mt-8">
+  <!-- Header -->
+  <header class="mb-8">
+    <h1 class="text-3xl font-display font-light text-white tracking-tight flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-3xl">calendar_month</span>
+      Calendario de Pagos
+    </h1>
+    <p class="text-on-surface-variant mt-2 max-w-2xl">
+      Proyección de tus compromisos financieros futuros, incluyendo cuotas de MSI y suscripciones activas.
+    </p>
+
+    <!-- Summary Card -->
+    <div class="mt-6 bg-surface-container-lowest/40 backdrop-blur-md rounded-3xl p-6 border border-primary/20 flex items-center justify-between overflow-hidden relative group">
+      <div class="absolute -right-16 -top-16 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/20 transition-colors"></div>
+      
+      <div class="relative z-10">
+        <p class="text-sm font-medium text-on-surface-variant uppercase tracking-widest mb-1">Total Comprometido</p>
+        <p class="text-4xl font-mono text-white font-semibold drop-shadow-md">
+          {{ totalFutureCommitments() | currency:'MXN' }}
+        </p>
+      </div>
+      <div class="hidden sm:flex w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 items-center justify-center relative z-10">
+        <span class="material-symbols-outlined text-3xl text-primary">monitoring</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loader -->
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-24">
+      <div class="inline-block relative w-12 h-12">
+        <div class="absolute w-12 h-12 rounded-full border-4 border-primary/20"></div>
+        <div class="absolute w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+      </div>
+    </div>
+  } @else if (monthGroups().length === 0) {
+    <!-- Empty State -->
+    <div class="text-center py-24 bg-surface-container-lowest/30 backdrop-blur-sm rounded-3xl border border-white/5">
+      <span class="material-symbols-outlined text-6xl text-on-surface-variant/40 mb-4">event_available</span>
+      <h3 class="text-xl font-medium text-white mb-2">Todo en orden</h3>
+      <p class="text-on-surface-variant">No tienes pagos programados ni cuotas pendientes hacia el futuro.</p>
+    </div>
+  } @else {
+    
+    <!-- Timeline -->
+    <div class="space-y-12">
+      @for (group of monthGroups(); track group.monthYear) {
+        
+        <div class="relative">
+          <!-- Month Header Sticky -->
+          <div class="sticky top-16 z-20 mb-6 flex items-center justify-between bg-[#1C1B1B]/95 backdrop-blur-xl py-4 border-b border-white/10">
+            <h2 class="text-xl md:text-2xl font-medium text-white capitalize flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">today</span>
+              {{ group.monthName }}
+            </h2>
+            <div class="text-right">
+              <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Total del mes</p>
+              <p class="text-lg font-mono text-secondary font-medium">{{ group.totalAmount | currency:'MXN' }}</p>
+            </div>
+          </div>
+
+          <!-- Events List -->
+          <div class="space-y-4 relative pl-4 md:pl-8 before:absolute before:inset-y-0 before:left-[11px] md:before:left-[27px] before:w-px before:bg-gradient-to-b before:from-white/20 before:via-white/5 before:to-transparent">
+            
+            @for (event of group.events; track event.id + '-' + event.date) {
+              <div class="relative flex items-center gap-4 group/event">
+                
+                <!-- Timeline Dot -->
+                <div class="w-2.5 h-2.5 rounded-full z-10 shadow-sm"
+                     [ngClass]="event.type === 'recurring' ? 'bg-primary shadow-primary/50' : 'bg-tertiary shadow-tertiary/50'">
+                </div>
+
+                <!-- Event Card -->
+                <div class="flex-1 bg-surface-container-lowest/60 backdrop-blur-lg rounded-2xl p-4 border border-white/5 hover:border-white/15 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
+                  
+                  <!-- Soft accent edge -->
+                  <div class="absolute left-0 top-0 bottom-0 w-1 opacity-50"
+                       [ngClass]="event.type === 'recurring' ? 'bg-primary' : 'bg-tertiary'"></div>
+
+                  <div class="flex items-center gap-4 pl-1">
+                    <!-- Icon -->
+                    <div class="w-12 h-12 shrink-0 rounded-xl bg-surface-container-high/50 border border-white/5 flex items-center justify-center overflow-hidden p-2">
+                      @if (event.type === 'recurring' && getBrandLogo(event.title)) {
+                        <img [src]="'https://cdn.simpleicons.org/' + getBrandLogo(event.title)"
+                             (error)="$event.target.style.display='none'; fallback.style.display='block'"
+                             class="w-full h-full object-contain drop-shadow-sm" alt="logo" />
+                        <span #fallback class="material-symbols-outlined text-xl text-on-surface-variant hidden" style="display: none;">{{ event.icon }}</span>
+                      } @else {
+                        <span class="material-symbols-outlined text-xl" [style.color]="event.color">{{ event.icon }}</span>
+                      }
+                    </div>
+
+                    <!-- Details -->
+                    <div>
+                      <p class="text-sm font-medium text-white">{{ event.title }}</p>
+                      <div class="flex items-center gap-3 mt-1 text-xs text-on-surface-variant">
+                        <span class="flex items-center gap-1 text-white/80">
+                          <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                          {{ event.date | date:'MMM d' }}
+                        </span>
+                        <span class="px-2 py-0.5 rounded border text-[9px] font-medium uppercase tracking-wider"
+                              [ngClass]="event.type === 'recurring' ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-tertiary/10 border-tertiary/20 text-tertiary'">
+                          {{ event.type === 'recurring' ? 'Suscripción' : 'Cuota MSI' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Amount -->
+                  <div class="text-right w-full sm:w-auto mt-2 sm:mt-0">
+                    <p class="text-lg font-mono font-medium text-white">{{ event.amount | currency:'MXN' }}</p>
+                    @if (event.status === 'pending') {
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mt-0.5">Pendiente</p>
+                    } @else if (event.status === 'paid') {
+                      <p class="text-[10px] text-green-400 uppercase tracking-widest mt-0.5">Pagado</p>
+                    } @else if (event.status === 'skipped') {
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mt-0.5">Omitido</p>
+                    }
+                  </div>
+
+                </div>
+              </div>
+            }
+
+          </div>
+        </div>
+
+      }
+    </div>
+  }
+</div>

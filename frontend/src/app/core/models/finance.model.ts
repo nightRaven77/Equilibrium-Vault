@@ -39,10 +39,12 @@ export interface Category {
 }
 
 export interface MonthlySummary {
-  year_month: string;
-  category_id: string;
-  category_name: string;
+  month: string;
+  category: string;
+  category_color?: string;
+  category_icon?: string;
   type: 'income' | 'expense';
+  transaction_count: number;
   total_amount: number;
 }
 

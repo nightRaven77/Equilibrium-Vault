@@ -330,10 +330,10 @@ Hasta la fecha, se ha completado la construcción de la estructura base y los pr
 11. ✅ **Frontend Base (Angular)** — Inicialización completada, estructura modular, Tailwind v4 configurado y sistema de diseño "Equilibrium Obsidian" establecido.
 
 **Por Desarrollar / Siguientes Tareas (⏳):**
-12. ⏳ **Módulo Recurrentes (Suscripciones)** — Implementar la visualización y gestión de pagos recurrentes en el frontend.
-13. ⏳ **Calendario de Pagos** — Nueva vista para visualizar el impacto futuro de los MSI y pagos recurrentes en una línea de tiempo.
-14. ⏳ **PWA (Configuración Final)** — Refinar el service worker y la instalación offline para dispositivos móviles.
-15. ⏳ **Dashboard Analytics** — Gráficas avanzadas de flujo de caja y tendencias de gasto.
+12. ✅ **Módulo Recurrentes (Suscripciones)** — Implementar la visualización y gestión de pagos recurrentes en el frontend.
+13. ✅ **Calendario de Pagos** — Nueva vista para visualizar el impacto futuro de los MSI y pagos recurrentes en una línea de tiempo.
+14. ✅ **PWA (Configuración Final)** — Refinar el service worker y la instalación offline para dispositivos móviles.
+15. ✅ **Dashboard Analytics** — Gráficas avanzadas de flujo de caja y tendencias de gasto.
 
 ---
 

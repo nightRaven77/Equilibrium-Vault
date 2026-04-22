@@ -58,18 +58,35 @@ export class ModalService {
 
   // --- Occurrence Pay Modal ---
   private _isOccurrencePayModalOpen = signal<boolean>(false);
-  private _selectedOccurrenceId = signal<string | null>(null);
+  private _selectedUpcomingPayment = signal<any | null>(null);
 
   public isOccurrencePayModalOpen = this._isOccurrencePayModalOpen.asReadonly();
-  public selectedOccurrenceId = this._selectedOccurrenceId.asReadonly();
+  public selectedUpcomingPayment = this._selectedUpcomingPayment.asReadonly();
 
-  openOccurrencePayModal(occurrenceId: string) {
-    this._selectedOccurrenceId.set(occurrenceId);
+  openOccurrencePayModal(payment: any) {
+    this._selectedUpcomingPayment.set(payment);
     this._isOccurrencePayModalOpen.set(true);
   }
 
   closeOccurrencePayModal() {
     this._isOccurrencePayModalOpen.set(false);
-    this._selectedOccurrenceId.set(null);
+    this._selectedUpcomingPayment.set(null);
+  }
+
+  // --- Recurring History Modal ---
+  private _isRecurringHistoryModalOpen = signal<boolean>(false);
+  private _selectedHistoryPlanId = signal<string | null>(null);
+
+  public isRecurringHistoryModalOpen = this._isRecurringHistoryModalOpen.asReadonly();
+  public selectedHistoryPlanId = this._selectedHistoryPlanId.asReadonly();
+
+  openRecurringHistoryModal(planId: string) {
+    this._selectedHistoryPlanId.set(planId);
+    this._isRecurringHistoryModalOpen.set(true);
+  }
+
+  closeRecurringHistoryModal() {
+    this._isRecurringHistoryModalOpen.set(false);
+    this._selectedHistoryPlanId.set(null);
   }
 }

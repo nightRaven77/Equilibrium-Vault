@@ -58,50 +58,43 @@
 
   <!-- Bento Content Grid -->
   <div class="grid grid-cols-12 gap-6">
-    <!-- Spending Dynamic Chart -->
-    <div class="col-span-12 md:col-span-8 bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8">
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h3 class="font-headline text-lg font-bold">Spending Dynamics</h3>
-          <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Shared vs Individual allocation</p>
+    <!-- Analytics: Cash Flow & Categories -->
+    <div class="col-span-12 md:col-span-8 flex flex-col gap-6">
+      <!-- Cash Flow Trend -->
+      <div class="bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex-1">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <h3 class="font-headline text-lg font-bold">Cash Flow Dynamics</h3>
+            <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Income vs Expense Trend</p>
+          </div>
         </div>
-        <div class="flex gap-4">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-primary"></span>
-            <span class="font-label text-[10px] text-on-surface-variant uppercase">Shared</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-secondary-container"></span>
-            <span class="font-label text-[10px] text-on-surface-variant uppercase">Individual</span>
-          </div>
+        <div class="h-64 w-full relative">
+          @if (!isLoading()) {
+            <div echarts [options]="cashFlowOptions()" class="h-full w-full"></div>
+          } @else {
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
+            </div>
+          }
         </div>
       </div>
-      <div class="relative h-64 flex items-end gap-12 px-4">
-        <div class="flex-1 flex flex-col justify-end group">
-          <div class="flex gap-2 h-48 items-end relative">
-            <div class="w-1/2 bg-primary/80 h-[85%] rounded-t-sm group-hover:bg-primary transition-colors"></div>
-            <div class="w-1/2 bg-secondary-container h-[40%] rounded-t-sm group-hover:brightness-125 transition-all"></div>
+
+      <!-- Expense Categories -->
+      <div class="bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex-1">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <h3 class="font-headline text-lg font-bold">Expense Distribution</h3>
+            <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Current Cycle Categories</p>
           </div>
-          <p class="font-label text-[10px] mt-4 text-center tracking-tighter text-on-surface-variant">CYCLE_01</p>
         </div>
-        <div class="flex-1 flex flex-col justify-end group">
-          <div class="flex gap-2 h-48 items-end relative">
-            <div class="w-1/2 bg-primary/80 h-[70%] rounded-t-sm group-hover:bg-primary transition-colors"></div>
-            <div class="w-1/2 bg-secondary-container h-[55%] rounded-t-sm group-hover:brightness-125 transition-all"></div>
-          </div>
-          <p class="font-label text-[10px] mt-4 text-center tracking-tighter text-on-surface-variant">CYCLE_02</p>
-        </div>
-        <div class="flex-1 flex flex-col justify-end group">
-          <div class="flex gap-2 h-48 items-end relative">
-            <div class="w-1/2 bg-primary status-glow h-[95%] rounded-t-sm group-hover:brightness-110 transition-all"></div>
-            <div class="w-1/2 bg-secondary-container h-[35%] rounded-t-sm group-hover:brightness-125 transition-all"></div>
-          </div>
-          <p class="font-label text-[10px] mt-4 text-center tracking-tighter font-bold text-primary">CURRENT</p>
-        </div>
-        <div class="absolute inset-0 border-b border-outline-variant/15 flex flex-col justify-between pointer-events-none opacity-20">
-          <div class="border-t border-outline-variant/15 w-full h-1"></div>
-          <div class="border-t border-outline-variant/15 w-full h-1"></div>
-          <div class="border-t border-outline-variant/15 w-full h-1"></div>
+        <div class="h-64 w-full relative">
+          @if (!isLoading()) {
+            <div echarts [options]="categoryOptions()" class="h-full w-full"></div>
+          } @else {
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
+            </div>
+          }
         </div>
       </div>
     </div>
