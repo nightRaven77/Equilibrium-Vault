@@ -1,68 +1,94 @@
-# Finance Tracker Backend 🚀
+# Equilibrium Vault (v1.0) 🍌✨
 
-Backend de alto rendimiento construido con **FastAPI** y **Supabase** para administrar finanzas personales y en pareja. Este servicio expone una API RESTFul rápida, tipada y con reglas de seguridad estrictas (Row Level Security) nativas de Postgres.
+**Equilibrium Vault** (internamente *NanoBanana*) es una plataforma integral de gestión financiera personal y de parejas, diseñada con una estética premium *dark obsidian* e interfaces de alto rendimiento.
+
+Este repositorio contiene la versión `v1.0` completa, que incluye un backend seguro y escalable, y una Progressive Web App (PWA) reactiva.
+
+---
+
+## 🚀 Características Principales
+
+*   **Dashboard Analytics Interactivo:** Gráficas de flujo de caja y tendencias de gasto renderizadas en tiempo real con **Apache ECharts** y efectos *glassmorphism*.
+*   **Gestión de Tarjetas de Crédito y MSI:** Sistema avanzado de fechas de corte y cálculo automático de Meses Sin Intereses con transacciones "hijas".
+*   **Calendario Predictivo:** Línea de tiempo visual para anticipar cobros de suscripciones y cuotas de MSI pendientes.
+*   **Ahorros y Finanzas Compartidas:** Gestión de deudas cruzadas entre parejas y simulador visual de metas de ahorro.
+*   **Seguridad de Nivel Bancario:** Autenticación JWT y políticas nativas de Row Level Security (RLS) en la base de datos PostgreSQL.
+*   **PWA Instalable:** Acceso como app nativa offline con caché estricto y seguro (solo UI, sin comprometer datos financieros).
+
+---
 
 ## 🏗 Stack Tecnológico
-- **Framework:** FastAPI (Python 3.13+)
-- **Base de Datos & Auth:** Supabase (PostgreSQL + JWT)
-- **Manejo de Paquetes:** `uv`
-- **Validaciones:** Pydantic v2
-- **Llamadas Base de datos:** `supabase-py` (Cliente REST Oficial)
+
+### Backend (`/`)
+*   **Framework:** FastAPI (Python 3.13+)
+*   **Base de Datos & Auth:** Supabase (PostgreSQL + JWT + Triggers/Views)
+*   **Manejo de Paquetes:** `uv`
+*   **Validaciones:** Pydantic v2
+
+### Frontend (`/frontend`)
+*   **Framework:** Angular 17+ (Standalone Components, Signals, Control Flow)
+*   **Estilos:** TailwindCSS v4
+*   **Visualización de Datos:** Apache ECharts (`ngx-echarts`)
+*   **PWA:** `@angular/service-worker`
+
+---
 
 ## 📦 Estructura del Proyecto
 
 ```text
-├── app/
-│   ├── api/
-│   │   ├── dependencies/  # Middlewares (ej. Inyección del token JWT en Supabase)
-│   │   └── routers/       # Módulos de negocio (CRUDs)
-│   ├── core/              # Configuración base y variables de entorno
-│   ├── db/                # Inicialización de Supabase
-│   └── schemas/           # Pydantic models & Enums
-├── main.py                # Entrypoint y configuración CORS
-├── PROJECT_CONTEXT.md     # Documentación original y mapeo de Base de Datos
-└── README.md
+├── app/                   # 🐍 BACKEND (FastAPI)
+│   ├── api/routers/       # Endpoints (Personal, Cards, Recurring, Couples, Savings)
+│   ├── core/              # Autenticación y configuración global
+│   ├── db/                # Cliente de Supabase
+│   └── schemas/           # Modelos Pydantic de entrada/salida
+├── frontend/              # 🅰️ FRONTEND (Angular)
+│   ├── public/icons/      # Assets de la PWA (NanoBanana icon)
+│   ├── src/app/core/      # Servicios (HTTP), Interceptors (JWT), Modelos
+│   └── src/app/features/  # Componentes UI (Dashboard, Calendar, Layout, Auth)
+├── main.py                # Entrypoint de FastAPI
+└── PROJECT_CONTEXT.md     # Bitácora detallada de arquitectura y base de datos
 ```
+
+---
 
 ## 🛠 Instalación y Configuración Local
 
-1. **Instalar dependencias:**
-   Usamos `uv` para la máxima velocidad. En la raíz del proyecto ejecuta:
+### 1. Configurar el Backend (FastAPI)
+
+1. Ve a la raíz del proyecto e instala las dependencias de Python ultra-rápido usando `uv`:
    ```bash
    uv sync
    ```
-
-2. **Variables de Entorno:**
-   Copia el archivo de prueba y configúralo con las llaves de tu panel de Supabase:
+2. Crea el archivo de variables de entorno:
    ```bash
    cp .env.example .env
    ```
-   Abre `.env` e inserta tu `SUPABASE_URL` y tu Public `SUPABASE_KEY` (Anon Key).
-
-3. **Arrancar el Servidor:**
+   *(Asegúrate de llenar `SUPABASE_URL` y `SUPABASE_KEY` con tus credenciales).*
+3. Arranca el servidor:
    ```bash
    uv run uvicorn main:app --reload
    ```
+   👉 *Swagger UI (Documentación API): `http://127.0.0.1:8000/docs`*
 
-## 🔑 Pruebas / Swagger UI
+### 2. Configurar el Frontend (Angular)
 
-El proyecto incluye auto-documentación usando Swagger.
-Una vez que el servidor esté corriendo, navega a:
-👉 `http://127.0.0.1:8000/docs`
+1. Abre una nueva terminal y navega a la carpeta del frontend:
+   ```bash
+   cd frontend
+   ```
+2. Instala los paquetes de Node:
+   ```bash
+   npm install
+   ```
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run start
+   ```
+   👉 *Aplicación Web: `http://localhost:4200`*
 
-**Para interactuar con la Base de datos protegida por RLS:**
-1. Ve al endpoint `POST /api/v1/auth/login`.
-2. Introduce tu email y contraseña de tu usuario en Supabase (`Try it out` -> `Execute`).
-3. Copia el string devuelto con la etiqueta `"access_token"`.
-4. Sube a la cima de la página del navegador, haz clic en el botón verde **"Authorize"** y pega tu token.
+*(Nota: Para probar la instalación PWA en el navegador, debes compilar el proyecto usando `npm run build` y servir la carpeta `dist/frontend/browser` con un servidor estático como `http-server`).*
 
-Todo el resto de llamadas a módulos (`/personal`, `/cards`, `/recurring`, etc.) inyectarán este token y aislarán los datos correctamente.
+---
 
-## 📌 Progreso de Módulos (Features)
-
-- [x] Autenticación e Inyección dinámica a Base de Datos (Seguridad RLS).
-- [x] Módulo Personal (Transacciones Individuales, Lectura de Vistas).
-- [x] Módulo de Tarjetas y Gestión Histórica de Cortes (Soft-Deletes).
-- [x] Pagos Recurrentes (Suscripciones, Ocurrencias, Acción automatizada de Pagos).
-- [ ] Vínculos / Parejas (Gastos en fracciones compartidas).
-- [ ] Metas de Ahorros y simulación virtual de intereses.
+## 📌 Estado del Proyecto
+**Versión 1.0 (Completada):** Todos los módulos core detallados en `PROJECT_CONTEXT.md` (Personal, Tarjetas, Recurrentes, Parejas, Ahorros, Calendario, Analytics y PWA) han sido finalizados y probados con éxito.
