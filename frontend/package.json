@@ -32,6 +32,7 @@
     "echarts": "^6.0.0",
     "ngx-echarts": "^20.0.2",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.26.24",
     "tailwindcss": "^4.2.2",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ModalService } from '../../services/modal.service';
 import { FinanceService } from '../../services/finance.service';
 import { RefreshService } from '../../services/refresh.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-card-modal',
@@ -15,6 +16,7 @@ export class CardModalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private financeService = inject(FinanceService);
   private refreshService = inject(RefreshService);
+  private alertService = inject(AlertService);
   public modalService = inject(ModalService);
 
   public cardForm!: FormGroup;
@@ -111,26 +113,48 @@ export class CardModalComponent implements OnInit {
     }
   }
 
-  private handleSuccess() {
+  private handleSuccess(message = 'Los cambios han sido guardados correctamente.') {
     this.isLoading.set(false);
     this.refreshService.triggerRefresh();
+    this.alertService.success('¡Listo!', message);
     this.close();
   }
 
   private handleError(err: any) {
     this.isLoading.set(false);
     console.error('Error saving card:', err);
-    alert('Failed to save credit card. Please try again.');
+    
+    if (err.status === 400 && err.error && err.error.detail && err.error.detail.message) {
+      this.alertService.error('No se pudo guardar', err.error.detail.message);
+    } else {
+      this.alertService.error('Error inesperado', 'Ocurrió un error al guardar la tarjeta. Por favor, intenta de nuevo.');
+    }
   }
 
   deleteCard() {
     const cardId = this.modalService.selectedCardId();
-    if (cardId && confirm('Are you sure you want to delete this card? This action will hide it from future transactions.')) {
+    if (!cardId) return;
+    
+    this.alertService.confirm(
+      '¿Eliminar tarjeta?',
+      'Esta acción ocultará la tarjeta permanentemente.'
+    ).then(result => {
+      if (!result.isConfirmed) return;
+      
       this.isLoading.set(true);
       this.financeService.deleteCreditCard(cardId).subscribe({
-        next: () => this.handleSuccess(),
-        error: (err) => this.handleError(err),
+        next: () => this.handleSuccess('La tarjeta ha sido eliminada.'),
+        error: (err) => {
+          console.error('Error deleting card:', err);
+          if (err.status === 404 || err.status === 204 || err.status === 200) {
+            this.handleSuccess('La tarjeta ha sido eliminada.');
+          } else {
+            this.isLoading.set(false);
+            const message = err.error?.detail?.message ?? 'Ocurrió un error inesperado.';
+            this.alertService.error('No se pudo eliminar', message);
+          }
+        },
       });
-    }
+    });
   }
 }

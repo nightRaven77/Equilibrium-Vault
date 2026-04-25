@@ -10,11 +10,11 @@ from app.schemas.enums import StatementStatus
 class CreditCardBase(BaseModel):
     bank_name: str = Field(max_length=80)
     alias: Optional[str] = Field(None, max_length=60)
-    last_four: str = Field(min_length=4, max_length=4)
+    last_four: str = Field(min_length=4, max_length=4, pattern=r"^\d{4}$")
     credit_limit: Decimal = Field(gt=0, decimal_places=2)
     cutoff_day: int = Field(ge=1, le=31)
     payment_due_days: int = Field(default=20)
-    min_payment_pct: Decimal = Field(default=1.50, max_digits=5, decimal_places=2)
+    min_payment_pct: Decimal = Field(default=1.50, le=100, max_digits=5, decimal_places=2)
     annual_rate_pct: Decimal = Field(default=0, max_digits=5, decimal_places=2)
     is_active: bool = True
 
@@ -24,10 +24,11 @@ class CreditCardCreate(CreditCardBase):
 class CreditCardUpdate(BaseModel):
     bank_name: Optional[str] = Field(None, max_length=80)
     alias: Optional[str] = Field(None, max_length=60)
+    last_four: Optional[str] = Field(None, min_length=4, max_length=4, pattern=r"^\d{4}$")
     credit_limit: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
     cutoff_day: Optional[int] = Field(None, ge=1, le=31)
     payment_due_days: Optional[int] = Field(None)
-    min_payment_pct: Optional[Decimal] = Field(None, max_digits=5, decimal_places=2)
+    min_payment_pct: Optional[Decimal] = Field(None, le=100, max_digits=5, decimal_places=2)
     annual_rate_pct: Optional[Decimal] = Field(None, max_digits=5, decimal_places=2)
     is_active: Optional[bool] = None
 

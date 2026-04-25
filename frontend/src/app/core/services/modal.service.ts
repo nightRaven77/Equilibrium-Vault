@@ -1,12 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ModalService {
   // Signal para controlar la visibilidad del modal global de transacciones
   private _isTransactionModalOpen = signal<boolean>(false);
-  
+
   // Exponemos el signal como readonly para que solo se pueda cambiar vía métodos
   public isTransactionModalOpen = this._isTransactionModalOpen.asReadonly();
 
@@ -19,7 +19,7 @@ export class ModalService {
   }
 
   toggleTransactionModal() {
-    this._isTransactionModalOpen.update(open => !open);
+    this._isTransactionModalOpen.update((open) => !open);
   }
 
   // --- Card Modal ---
@@ -37,6 +37,23 @@ export class ModalService {
   closeCardModal() {
     this._isCardModalOpen.set(false);
     this._selectedCardId.set(null);
+  }
+
+  // --- Confirm Delete Modal ---
+  private _isConfirmDeleteModalOpen = signal<boolean>(false);
+  private _confirmDeleteAction = signal<(() => void) | null>(null);
+
+  public isConfirmDeleteModalOpen = this._isConfirmDeleteModalOpen.asReadonly();
+  public confirmDeleteAction = this._confirmDeleteAction.asReadonly();
+
+  openConfirmDeleteModal(action: () => void) {
+    this._confirmDeleteAction.set(action);
+    this._isConfirmDeleteModalOpen.set(true);
+  }
+
+  closeConfirmDeleteModal() {
+    this._isConfirmDeleteModalOpen.set(false);
+    this._confirmDeleteAction.set(null);
   }
 
   // --- Recurring Plan Modal ---

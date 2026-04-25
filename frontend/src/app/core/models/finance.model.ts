@@ -102,6 +102,8 @@ export interface CreditCard {
   min_payment_pct: number;
   annual_rate_pct: number;
   is_active: boolean;
+  currentBalance?: number;
+  usagePct?: number;
 }
 
 export interface CreditCardCreate {

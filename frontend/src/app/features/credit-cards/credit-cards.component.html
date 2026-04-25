@@ -50,7 +50,7 @@
             <div class="group relative bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5">
               
               <!-- Dynamic Bank Background -->
-              <div class="absolute inset-0 bg-gradient-to-br transition-all duration-500 opacity-20" [ngClass]="getBankGradient(card.bank_name)"></div>
+              <div class="absolute inset-0 bg-gradient-to-br transition-all duration-500 opacity-100" [ngClass]="getBankGradient(card.bank_name)"></div>
               
               <!-- Card Controls Hover -->
               <div class="absolute top-4 right-4 flex gap-2 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
@@ -86,10 +86,10 @@
                     <div class="space-y-1.5">
                         <div class="flex justify-between items-end px-0.5">
                             <p class="text-[8px] font-label text-on-surface-variant uppercase tracking-widest">Vault_Usage</p>
-                            <p class="text-[10px] font-headline font-bold text-on-surface">5.4%</p>
+                            <p class="text-[10px] font-headline font-bold text-on-surface">{{ card.usagePct || 0 | number:'1.0-1' }}%</p>
                         </div>
                         <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden p-[1px] border border-outline-variant/10">
-                            <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 5.4%"></div>
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" [style.width.%]="card.usagePct || 0"></div>
                         </div>
                     </div>
 
@@ -130,14 +130,14 @@
       <p class="font-label text-xs font-bold tracking-[0.2em] text-primary uppercase">Credit_Integrity_Score</p>
       
       <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
-        <!-- SVG Gauge -->
-        <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-          <circle class="text-surface-container-highest" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="6"></circle>
-          <circle class="text-primary" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="50.2" stroke-linecap="round" stroke-width="6" class="transition-all duration-1000"></circle>
-        </svg>
-        <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-5xl font-headline font-bold tracking-tighter text-on-surface">842</span>
-          <span class="text-[10px] font-label text-primary font-bold uppercase tracking-widest">Elite_Tier</span>
+        <!-- ECharts Pie Chart -->
+        <div echarts [options]="utilizationOptions()" class="w-full h-full"></div>
+        
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span class="text-3xl font-headline font-bold tracking-tighter text-on-surface">
+            {{ totalBalance() | currency:'USD':'symbol':'1.0-0' }}
+          </span>
+          <span class="text-[10px] font-label text-primary font-bold uppercase tracking-widest">Used</span>
         </div>
       </div>
 

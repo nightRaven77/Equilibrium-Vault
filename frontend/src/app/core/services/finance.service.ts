@@ -87,8 +87,8 @@ export class FinanceService {
   /**
    * Elimina (soft-delete) una tarjeta de crédito
    */
-  deleteCreditCard(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/cards/${id}`);
+  deleteCreditCard(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/cards/${id}`, { responseType: 'text' as 'json' });
   }
 
   /**
