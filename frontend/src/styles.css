@@ -218,3 +218,9 @@
 .swal2-icon.swal2-success { border-color: #47EAED !important; color: #47EAED !important; }
 .swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(71, 234, 237, 0.3) !important; }
 .swal2-icon.swal2-success [class^='swal2-success-line'] { background: #47EAED !important; }
+
+/* ─── Shimmer animation for savings progress bars ─── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}

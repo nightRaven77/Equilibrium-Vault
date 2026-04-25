@@ -10,6 +10,11 @@ import {
   Couple,
   CreditCard,
   SavingGoalSummary,
+  SavingGoal,
+  SavingGoalCreate,
+  SavingGoalUpdate,
+  SavingTransaction,
+  SavingTransactionCreate,
   Category,
   TransactionCreate,
   CoupleTransactionCreate,
@@ -98,11 +103,34 @@ export class FinanceService {
     return this.http.get<CardStatement[]>(`${this.apiUrl}/cards/${cardId}/statements`);
   }
 
-  /**
-   * Obtiene las metas de ahorro con sumario de progreso
-   */
+  /** Obtiene las metas de ahorro con sumario de progreso */
   getSavings(): Observable<SavingGoalSummary[]> {
     return this.http.get<SavingGoalSummary[]>(`${this.apiUrl}/savings/`);
+  }
+
+  /** Crea una nueva meta de ahorro */
+  createSavingGoal(data: SavingGoalCreate): Observable<SavingGoal> {
+    return this.http.post<SavingGoal>(`${this.apiUrl}/savings/`, data);
+  }
+
+  /** Actualiza una meta de ahorro */
+  updateSavingGoal(id: string, data: SavingGoalUpdate): Observable<SavingGoal> {
+    return this.http.patch<SavingGoal>(`${this.apiUrl}/savings/${id}`, data);
+  }
+
+  /** Cancela (soft-delete) una meta de ahorro */
+  cancelSavingGoal(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/savings/${id}`, { responseType: 'text' });
+  }
+
+  /** Obtiene los movimientos de una meta */
+  getSavingTransactions(goalId: string): Observable<SavingTransaction[]> {
+    return this.http.get<SavingTransaction[]>(`${this.apiUrl}/savings/${goalId}/transactions`);
+  }
+
+  /** Registra un depósito o retiro */
+  createSavingTransaction(goalId: string, data: SavingTransactionCreate): Observable<SavingTransaction> {
+    return this.http.post<SavingTransaction>(`${this.apiUrl}/savings/${goalId}/transactions`, data);
   }
 
   /**

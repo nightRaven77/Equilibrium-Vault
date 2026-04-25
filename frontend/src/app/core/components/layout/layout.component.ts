@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -6,11 +6,14 @@ import { AuthService } from '../../services/auth.service';
 import { ModalService } from '../../services/modal.service';
 import { TransactionModalComponent } from '../transaction-modal/transaction-modal.component';
 import { CardModalComponent } from '../card-modal/card-modal.component';
+import { SavingGoalModalComponent } from '../saving-goal-modal/saving-goal-modal.component';
+import { SavingTxModalComponent } from '../saving-tx-modal/saving-tx-modal.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TransactionModalComponent, CardModalComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TransactionModalComponent, CardModalComponent, SavingGoalModalComponent, SavingTxModalComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent {

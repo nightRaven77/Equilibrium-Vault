@@ -1,96 +1,244 @@
+<!-- ─── Header ─────────────────────────────────────────────────────────────── -->
 <div class="mb-6 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
   <div class="space-y-1">
     <h2 class="text-2xl md:text-4xl font-headline font-bold tracking-tighter text-on-surface uppercase">Savings Trajectory</h2>
-    <p class="text-on-surface-variant font-label text-[10px] md:text-sm tracking-widest">ASSET ACCUMULATION &amp; GOAL TRACKING</p>
+    <p class="text-on-surface-variant font-label text-[10px] md:text-sm tracking-widest">ASSET ACCUMULATION & GOAL TRACKING</p>
   </div>
-  <div class="flex gap-4">
+  <div class="flex items-center flex-wrap gap-3">
     <div class="px-4 py-2 bg-surface-container-low border-l-2 border-primary">
       <p class="text-[10px] font-label text-primary uppercase">Total Accumulated</p>
-      <p class="text-xl font-headline font-bold">{{ totalSaved() | currency:'USD' }}</p>
+      <p class="text-xl font-headline font-bold">{{ totalSaved() | currency:'MXN' }}</p>
     </div>
-    <div class="px-4 py-2 bg-surface-container-low border-l-2 border-secondary">
-      <p class="text-[10px] font-label text-secondary uppercase">Global Target</p>
-      <p class="text-xl font-headline font-bold">{{ totalTarget() | currency:'USD' }}</p>
+    <div class="px-4 py-2 bg-surface-container-low border-l-2 border-[#ffb876]">
+      <p class="text-[10px] font-label text-[#ffb876] uppercase">Global Target</p>
+      <p class="text-xl font-headline font-bold">{{ totalTarget() | currency:'MXN' }}</p>
     </div>
+    <button (click)="openNewGoalModal()"
+      class="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-label text-xs font-bold tracking-widest uppercase hover:brightness-110 transition-all status-glow active:scale-95">
+      <span class="material-symbols-outlined text-base">add</span>
+      New Goal
+    </button>
   </div>
 </div>
 
 <div class="grid grid-cols-12 gap-6">
-  <div class="col-span-12 lg:col-span-8 space-y-6">
-    <div class="flex items-center justify-between border-b border-outline-variant/10 pb-2">
+
+  <!-- ─── Left Column: Goals List ───────────────────────────────────────────── -->
+  <div class="col-span-12 lg:col-span-8 space-y-4">
+    <div class="flex items-center justify-between border-b border-outline-variant/10 pb-2 mb-2">
       <h3 class="font-label text-sm font-bold tracking-widest text-on-surface-variant uppercase flex items-center gap-2">
         <span class="w-1.5 h-1.5 bg-primary rounded-full"></span>
         Strategic Objectives
       </h3>
-      <span class="text-[10px] font-label text-primary/50">{{ savings().length }} ACTIVE OBJECTIVES</span>
+      <span class="text-[10px] font-label text-primary/50">{{ activeGoals().length }} ACTIVE</span>
     </div>
 
-    <div class="space-y-4">
-      @if (isLoading()) {
-        <div class="p-8 flex justify-center">
-          <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
-        </div>
-      } @else if (savings().length === 0) {
-        <div class="p-8 text-center text-on-surface-variant tracking-widest text-sm uppercase opacity-60">
-          No saving goals found
-        </div>
-      } @else {
-        @for (goal of savings(); track goal.id) {
-          <!-- Vertical List Item -->
-          <div class="bg-surface-container-low p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-transparent hover:border-outline-variant/20 transition-all group">
-            <div class="flex items-center gap-6">
-              <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/20 relative" [style.borderColor]="goal.color || '#47EAED'">
-                <span class="material-symbols-outlined text-[24px]" [style.color]="goal.color || '#47EAED'">{{ goal.icon || 'star' }}</span>
+    @if (isLoading()) {
+      <div class="p-8 flex justify-center">
+        <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
+      </div>
+    } @else if (activeGoals().length === 0) {
+      <div class="p-12 text-center bg-surface-container-low rounded-xl border border-outline-variant/10">
+        <span class="text-5xl block mb-4">💰</span>
+        <p class="text-on-surface-variant tracking-widest text-sm uppercase opacity-60 mb-4">No hay metas de ahorro activas</p>
+        <button (click)="openNewGoalModal()"
+          class="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-label text-xs font-bold tracking-widest uppercase hover:brightness-110 transition-all">
+          Crear primera meta
+        </button>
+      </div>
+    } @else {
+      @for (goal of activeGoals(); track goal.id) {
+        <!-- Goal Card with per-goal color theming -->
+        <div class="relative p-6 rounded-xl border border-outline-variant/10 group cursor-default overflow-hidden"
+             [ngStyle]="getCardStyle(goal.color)"
+             [style.boxShadow]="'0 0 0 transparent'"
+             (mouseenter)="card.style.boxShadow = getGlowStyle(goal.color)"
+             (mouseleave)="card.style.boxShadow = '0 0 0 transparent'"
+             #card>
+
+          <!-- Top row: icon + name + status + actions -->
+          <div class="flex items-center justify-between gap-4 mb-5">
+            <div class="flex items-center gap-4">
+              <!-- Emoji icon bubble -->
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+                   [style.backgroundColor]="getAccentColor(goal.color) + '20'"
+                   [style.boxShadow]="'0 0 12px ' + getAccentColor(goal.color) + '30'">
+                {{ goal.icon || '💰' }}
               </div>
               <div>
-                <p class="font-body text-base font-semibold text-on-surface uppercase">{{ goal.name }}</p>
-                <p class="font-label text-[10px] text-on-surface-variant tracking-widest mt-1">STATUS: <span [ngClass]="{'text-primary': goal.status === 'active', 'text-error': goal.status === 'paused'}" class="capitalize">{{ goal.status }}</span></p>
-              </div>
-            </div>
-
-            <div class="flex-1 w-full md:w-auto md:px-8">
-              <div class="flex justify-between items-end mb-2">
-                <p class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Progression</p>
-                <p class="font-body text-xs text-primary font-medium">{{ goal.current_balance | currency:goal.currency }} / {{ goal.target_amount | currency:goal.currency }}</p>
-              </div>
-              <div class="h-2 rounded-full bg-surface-container-highest w-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-1000 ease-out relative" 
-                     [style.width.%]="goal.progress_pct" 
-                     [style.backgroundColor]="goal.color || '#47EAED'">
-                     <div class="absolute inset-0 bg-white/20 w-full h-full status-glow"></div>
+                <p class="font-body text-base font-semibold text-on-surface uppercase tracking-wide">{{ goal.name }}</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="inline-flex items-center gap-1 text-[9px] font-label font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        [ngClass]="getStatusClass(goal.status)"
+                        [style.backgroundColor]="getAccentColor(goal.color) + '15'">
+                    {{ goal.status }}
+                  </span>
+                  @if (goal.target_date) {
+                    <span class="text-[9px] font-label text-on-surface-variant/50 tracking-wider">
+                      · 📅 {{ goal.target_date }}
+                    </span>
+                  }
+                  @if (goal.annual_rate_pct > 0) {
+                    <span class="text-[9px] font-label tracking-wider" [style.color]="getAccentColor(goal.color)">
+                      · 📈 {{ goal.annual_rate_pct }}% APY
+                    </span>
+                  }
                 </div>
               </div>
             </div>
 
-            <div class="text-right">
-              <p class="font-headline text-lg font-bold">{{ goal.progress_pct | number:'1.1-2' }}%</p>
-              <p class="font-label text-[10px] uppercase mt-1 tracking-widest" [ngClass]="goal.progress_pct >= 100 ? 'text-primary' : 'text-[#859493]'">{{ goal.progress_pct >= 100 ? 'COMPLETED' : 'IN_PROGRESS' }}</p>
+            <!-- Action buttons (visible on hover) -->
+            <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+              <button (click)="openTxModal(goal)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                [style.backgroundColor]="getAccentColor(goal.color) + '20'"
+                [style.color]="getAccentColor(goal.color)"
+                title="Depósito / Retiro">
+                <span class="material-symbols-outlined text-[17px]">currency_exchange</span>
+              </button>
+              <button (click)="editGoal(goal.id)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                title="Editar">
+                <span class="material-symbols-outlined text-[17px]">edit</span>
+              </button>
+              <button (click)="cancelGoal(goal)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center bg-error/10 hover:bg-error/20 text-error transition-colors"
+                title="Cancelar meta">
+                <span class="material-symbols-outlined text-[17px]">cancel</span>
+              </button>
             </div>
           </div>
-        }
+
+          <!-- Progress section -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-end">
+              <div class="flex items-baseline gap-2">
+                <!-- Big percentage with goal color -->
+                <span class="text-2xl font-headline font-bold tracking-tighter"
+                      [style.color]="getAccentColor(goal.color)">
+                  {{ goal.progress_pct | number:'1.0-1' }}%
+                </span>
+                <span class="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Funded</span>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-body font-medium" [style.color]="getAccentColor(goal.color)">
+                  {{ goal.current_balance | currency:goal.currency }}
+                </p>
+                <p class="text-[10px] font-label text-on-surface-variant">
+                  of {{ goal.target_amount | currency:goal.currency }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Progress bar with glow -->
+            <div class="h-2.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
+              <div class="h-full rounded-full relative overflow-hidden transition-all duration-1000 ease-out"
+                   [style.width.%]="goal.progress_pct | number:'1.0-1'"
+                   [style.backgroundColor]="getAccentColor(goal.color)">
+                <!-- Shimmer animation -->
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                     style="background-size: 200% 100%; animation: shimmer 2s infinite linear;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Remaining -->
+            @if (goal.remaining && goal.progress_pct < 100) {
+              <p class="text-[10px] font-label text-on-surface-variant/60 tracking-wider">
+                Restante: <span class="font-semibold text-on-surface-variant">{{ goal.remaining | currency:goal.currency }}</span>
+              </p>
+            } @else if (goal.progress_pct >= 100) {
+              <p class="text-[10px] font-label tracking-wider font-bold" [style.color]="getAccentColor(goal.color)">
+                ✅ Meta alcanzada
+              </p>
+            }
+          </div>
+        </div>
       }
-    </div>
+    }
   </div>
-  
-  <div class="col-span-12 lg:col-span-4 space-y-6">
-    <!-- Global Progression Gauge -->
-    <div class="bg-surface-container-low p-8 rounded-lg text-center space-y-6 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
+
+  <!-- ─── Right Column: Stats Panel ─────────────────────────────────────────── -->
+  <div class="col-span-12 lg:col-span-4 space-y-4">
+
+    <!-- Global Gauge -->
+    <div class="bg-surface-container-low p-6 rounded-xl text-center space-y-4 relative overflow-hidden border border-outline-variant/10">
+      <!-- Top color bar using top goal's color -->
+      <div class="absolute top-0 left-0 w-full h-0.5 transition-colors duration-700"
+           [style.backgroundColor]="getTopGoalColor()"></div>
+
       <p class="font-label text-xs font-bold tracking-[0.2em] text-on-surface-variant uppercase">Global Integrity</p>
-      <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
-        <svg class="w-full h-full -rotate-90 transform" viewbox="0 0 100 100">
-          <circle class="text-surface-container-highest" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
-          <circle class="text-primary transition-all duration-1000 ease-out" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" [attr.stroke-dasharray]="'251.2'" [attr.stroke-dashoffset]="251.2 - (251.2 * overallProgress() / 100)" stroke-linecap="round" stroke-width="8"></circle>
+
+      <!-- SVG Gauge colored by top goal -->
+      <div class="relative w-44 h-44 mx-auto flex items-center justify-center">
+        <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+          <circle class="text-surface-container-highest" cx="50" cy="50" fill="transparent" r="40"
+            stroke="currentColor" stroke-width="7"></circle>
+          <circle cx="50" cy="50" fill="transparent" r="40"
+            [attr.stroke]="getTopGoalColor()"
+            [attr.stroke-dasharray]="'251.2'"
+            [attr.stroke-dashoffset]="251.2 - (251.2 * overallProgress() / 100)"
+            stroke-linecap="round" stroke-width="7"
+            style="transition: stroke-dashoffset 1s ease, stroke 0.7s ease;">
+          </circle>
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-4xl font-headline font-bold tracking-tighter">{{ overallProgress() | number:'1.0-1' }}%</span>
-          <span class="text-[10px] font-label text-primary uppercase">Funded</span>
+          <span class="text-3xl font-headline font-bold tracking-tighter"
+                [style.color]="getTopGoalColor()">
+            {{ overallProgress() | number:'1.0-1' }}%
+          </span>
+          <span class="text-[9px] font-label uppercase tracking-wider text-on-surface-variant">Funded</span>
         </div>
       </div>
-      <div class="space-y-4">
-        <p class="text-[11px] leading-relaxed text-on-surface-variant italic">"Your liquidity reservoir is progressing steadily towards global benchmarks."</p>
+
+      <!-- Stats grid -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-surface-container-high rounded-lg p-3 text-left">
+          <p class="text-[9px] font-label text-on-surface-variant uppercase tracking-widest mb-1">Metas activas</p>
+          <p class="text-2xl font-headline font-bold" [style.color]="getTopGoalColor()">{{ activeGoals().length }}</p>
+        </div>
+        <div class="bg-surface-container-high rounded-lg p-3 text-left">
+          <p class="text-[9px] font-label text-on-surface-variant uppercase tracking-widest mb-1">Restante</p>
+          <p class="text-sm font-headline font-bold text-on-surface">
+            {{ (totalTarget() - totalSaved()) | currency:'MXN':'symbol':'1.0-0' }}
+          </p>
+        </div>
       </div>
-      <button class="w-full py-3 bg-primary text-on-primary hover:brightness-110 font-label text-[10px] font-bold tracking-widest transition-colors uppercase rounded-lg">Allocate Funds</button>
+
+      <!-- Mini per-goal progress list -->
+      @if (activeGoals().length > 0) {
+        <div class="space-y-2 text-left">
+          <p class="text-[9px] font-label text-on-surface-variant uppercase tracking-widest">Por meta</p>
+          @for (goal of activeGoals(); track goal.id) {
+            <div class="flex items-center gap-2">
+              <span class="text-base shrink-0">{{ goal.icon || '💰' }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center mb-0.5">
+                  <span class="text-[10px] font-label text-on-surface truncate">{{ goal.name }}</span>
+                  <span class="text-[10px] font-label font-bold shrink-0 ml-1"
+                        [style.color]="getAccentColor(goal.color)">
+                    {{ goal.progress_pct | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-700"
+                       [style.width.%]="goal.progress_pct | number:'1.0-1'"
+                       [style.backgroundColor]="getAccentColor(goal.color)">
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <button (click)="openNewGoalModal()"
+        class="w-full py-3 font-label text-[10px] font-bold tracking-widest uppercase rounded-xl transition-all active:scale-95"
+        [style.backgroundColor]="getTopGoalColor()"
+        [style.color]="'#0A0A0A'"
+        style="box-shadow: 0 0 16px currentcolor;">
+        + Allocate New Goal
+      </button>
     </div>
   </div>
 </div>

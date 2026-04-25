@@ -161,13 +161,70 @@ export interface SavingGoalSummary {
   target_amount: number;
   currency: string;
   annual_rate_pct: number;
+  compounding_frequency: string;
   target_date?: string | null;
-  status: 'active' | 'paused' | 'completed';
+  status: 'active' | 'paused' | 'completed' | 'cancelled';
   current_balance: number;
   progress_pct: number;
   remaining?: number | null;
   movement_count?: number | null;
   last_movement_date?: string | null;
+}
+
+export interface SavingGoalCreate {
+  name: string;
+  description?: string | null;
+  target_amount: number;
+  currency?: string;
+  annual_rate_pct?: number;
+  compounding_frequency: string;
+  target_date?: string | null;
+  icon?: string | null;
+  color?: string | null;
+}
+
+export interface SavingGoalUpdate {
+  name?: string;
+  description?: string | null;
+  target_amount?: number;
+  currency?: string;
+  annual_rate_pct?: number;
+  compounding_frequency?: string;
+  target_date?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  status?: 'active' | 'paused' | 'completed' | 'cancelled';
+}
+
+export interface SavingGoal {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  target_amount: number;
+  currency: string;
+  annual_rate_pct: number;
+  compounding_frequency: string;
+  target_date?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  status: 'active' | 'paused' | 'completed' | 'cancelled';
+}
+
+export interface SavingTransaction {
+  id: string;
+  saving_goal_id: string;
+  amount: number;
+  type: 'deposit' | 'withdrawal' | 'interest';
+  notes?: string | null;
+  transaction_date: string;
+}
+
+export interface SavingTransactionCreate {
+  amount: number;
+  type: 'deposit' | 'withdrawal';
+  notes?: string | null;
+  transaction_date: string;
 }
 
 export interface RecurringPayment {

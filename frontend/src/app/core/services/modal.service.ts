@@ -106,4 +106,38 @@ export class ModalService {
     this._isRecurringHistoryModalOpen.set(false);
     this._selectedHistoryPlanId.set(null);
   }
+
+  // --- Saving Goal Modal ---
+  private _isSavingGoalModalOpen = signal<boolean>(false);
+  private _selectedSavingGoalId = signal<string | null>(null);
+
+  public isSavingGoalModalOpen = this._isSavingGoalModalOpen.asReadonly();
+  public selectedSavingGoalId = this._selectedSavingGoalId.asReadonly();
+
+  openSavingGoalModal(goalId: string | null = null) {
+    this._selectedSavingGoalId.set(goalId);
+    this._isSavingGoalModalOpen.set(true);
+  }
+
+  closeSavingGoalModal() {
+    this._isSavingGoalModalOpen.set(false);
+    this._selectedSavingGoalId.set(null);
+  }
+
+  // --- Saving Transaction Modal ---
+  private _isSavingTxModalOpen = signal<boolean>(false);
+  private _selectedSavingGoalForTx = signal<{ id: string; name: string; color?: string | null; balance: number } | null>(null);
+
+  public isSavingTxModalOpen = this._isSavingTxModalOpen.asReadonly();
+  public selectedSavingGoalForTx = this._selectedSavingGoalForTx.asReadonly();
+
+  openSavingTxModal(goal: { id: string; name: string; color?: string | null; balance: number }) {
+    this._selectedSavingGoalForTx.set(goal);
+    this._isSavingTxModalOpen.set(true);
+  }
+
+  closeSavingTxModal() {
+    this._isSavingTxModalOpen.set(false);
+    this._selectedSavingGoalForTx.set(null);
+  }
 }
