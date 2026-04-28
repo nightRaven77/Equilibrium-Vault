@@ -1,0 +1,135 @@
+<div class="max-w-6xl mx-auto pb-12">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div>
+      <h2 class="font-headline text-3xl font-bold tracking-tight text-on-surface">Ledger Activity</h2>
+      <p class="font-label text-[10px] text-primary tracking-[0.2em] uppercase mt-1">Full Transaction History • Secure Vault</p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button (click)="modalService.openTransactionModal()"
+        class="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-label text-[10px] font-bold tracking-widest uppercase hover:brightness-110 transition-all status-glow flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+        Add Entry
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Row -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
+    <!-- Search -->
+    <div class="md:col-span-5 relative">
+      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40">search</span>
+      <input type="text" 
+        (input)="setSearch($event)"
+        placeholder="Filter by description or notes..."
+        class="w-full bg-surface-container-low border border-outline-variant/20 rounded-2xl py-3.5 pl-12 pr-4 font-label text-[10px] tracking-widest uppercase focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-on-surface-variant/20" />
+    </div>
+
+    <!-- Type Toggle -->
+    <div class="md:col-span-3 flex bg-surface-container-low p-1 rounded-2xl border border-outline-variant/20">
+      <button (click)="typeFilter.set('all')"
+        [class.bg-surface-container-high]="typeFilter() === 'all'"
+        [class.text-primary]="typeFilter() === 'all'"
+        class="flex-1 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all">All</button>
+      <button (click)="typeFilter.set('income')"
+        [class.bg-[#47EAED]/10]="typeFilter() === 'income'"
+        [class.text-[#47EAED]]="typeFilter() === 'income'"
+        class="flex-1 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all">Income</button>
+      <button (click)="typeFilter.set('expense')"
+        [class.bg-[#FF5E5E]/10]="typeFilter() === 'expense'"
+        [class.text-[#FF5E5E]]="typeFilter() === 'expense'"
+        class="flex-1 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all">Expense</button>
+    </div>
+
+    <!-- Category Selector -->
+    <div class="md:col-span-4">
+      <select (change)="categoryFilter.set($any($event.target).value)"
+        class="w-full bg-surface-container-low border border-outline-variant/20 rounded-2xl py-3.5 px-6 font-label text-[10px] tracking-widest uppercase focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+        <option value="all">All Categories</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Transactions Table/List -->
+  <div class="bg-surface-container-low rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center p-20 gap-4">
+        <span class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></span>
+        <p class="font-label text-[10px] text-on-surface-variant tracking-[0.3em] uppercase">Decrypting Ledger...</p>
+      </div>
+    } @else if (filteredTransactions().length === 0) {
+      <div class="flex flex-col items-center justify-center p-20 gap-4 opacity-40">
+        <span class="material-symbols-outlined text-6xl">inventory_2</span>
+        <p class="font-label text-xs tracking-[0.2em] uppercase">No records found matching criteria</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="border-b border-outline-variant/10 text-left">
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Entry Date</th>
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Resource / Ledger</th>
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Category</th>
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em]">Method</th>
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] text-right">Amount</th>
+              <th class="px-6 py-5 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/5">
+            @for (tx of filteredTransactions(); track tx.id) {
+              <tr class="group hover:bg-white/[0.02] transition-colors">
+                <td class="px-6 py-5">
+                  <p class="font-headline text-sm font-medium text-on-surface">{{ tx.transaction_date | date:'dd MMM yyyy' }}</p>
+                  <p class="font-label text-[8px] text-on-surface-variant uppercase tracking-tighter mt-0.5">VAULT_TIME_STAMP</p>
+                </td>
+                <td class="px-6 py-5">
+                  <p class="font-body text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{{ tx.description }}</p>
+                  @if (tx.notes) {
+                    <p class="text-[10px] text-on-surface-variant truncate max-w-[200px] mt-0.5 italic opacity-60">"{{ tx.notes }}"</p>
+                  }
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center border border-white/5 text-lg">
+                      {{ tx.categories?.icon || '📦' }}
+                    </span>
+                    <span class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">{{ tx.categories?.name || 'Unsorted' }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5">
+                   <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant">
+                      {{ tx.payment_method === 'credit_card' ? 'credit_card' : 'account_balance_wallet' }}
+                    </span>
+                    <span class="font-label text-[9px] uppercase tracking-widest text-[#859493]">{{ tx.payment_method }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-5 text-right">
+                  <p class="font-headline text-base font-bold" [ngClass]="{'text-[#47EAED]': tx.type === 'income', 'text-[#FF5E5E]': tx.type === 'expense'}">
+                    {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | currency:'USD' }}
+                  </p>
+                </td>
+                <td class="px-6 py-5">
+                  <div class="flex items-center justify-center gap-2">
+                    <button (click)="onEdit(tx)"
+                      class="p-2 rounded-lg bg-white/5 border border-white/5 text-on-surface-variant hover:text-primary hover:border-primary/30 transition-all active:scale-90">
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                    <button (click)="onDelete(tx)"
+                      class="p-2 rounded-lg bg-white/5 border border-white/5 text-on-surface-variant hover:text-error hover:border-error/30 transition-all active:scale-90">
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

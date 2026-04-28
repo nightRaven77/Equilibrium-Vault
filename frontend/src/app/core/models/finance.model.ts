@@ -13,6 +13,11 @@ export interface Transaction {
   is_installment: boolean;
   installment_months?: number | null;
   parent_transaction_id?: string | null;
+  categories?: {
+    name: string;
+    icon?: string;
+    color?: string;
+  } | null;
 }
 
 export interface TransactionCreate {
@@ -88,6 +93,18 @@ export interface Couple {
   user2_id: string;
   name?: string | null;
   status: 'active' | 'inactive';
+  user1_name?: string | null;
+  user2_name?: string | null;
+}
+
+export interface CoupleCreate {
+  user2_id: string;
+  name?: string | null;
+}
+
+export interface CoupleUpdate {
+  name?: string | null;
+  status?: 'active' | 'inactive';
 }
 
 export interface CreditCard {

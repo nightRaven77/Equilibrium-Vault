@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.types import Decimal
 from typing import Optional
 from datetime import date, datetime
@@ -24,6 +24,8 @@ class CoupleResponse(CoupleBase):
     user1_id: UUID
     user2_id: UUID
     status: CoupleStatus
+    user1_name: Optional[str] = None
+    user2_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,10 +35,17 @@ class CoupleTransactionBase(BaseModel):
     credit_card_id: Optional[UUID] = None
     amount: Decimal = Field(gt=0, decimal_places=2)
     payment_method: PaymentMethod
-    description: str = Field(max_length=200)
-    user1_share_pct: Decimal = Field(default=Decimal("50.00"), max_digits=5, decimal_places=2)
-    user2_share_pct: Decimal = Field(default=Decimal("50.00"), max_digits=5, decimal_places=2)
+    description: str = Field(min_length=1, max_length=200)
+    user1_share_pct: Decimal = Field(default=Decimal("50.00"), ge=0, le=100, max_digits=5, decimal_places=2)
+    user2_share_pct: Decimal = Field(default=Decimal("50.00"), ge=0, le=100, max_digits=5, decimal_places=2)
     transaction_date: date
+
+    @model_validator(mode="after")
+    def shares_must_sum_100(self) -> "CoupleTransactionBase":
+        total = (self.user1_share_pct or Decimal("0")) + (self.user2_share_pct or Decimal("0"))
+        if total != Decimal("100.00"):
+            raise ValueError(f"Los porcentajes deben sumar 100 (actualmente suman {total}).")
+        return self
 
 
 class CoupleTransactionCreate(CoupleTransactionBase):

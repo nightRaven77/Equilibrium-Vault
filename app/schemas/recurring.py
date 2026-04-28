@@ -1,22 +1,16 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.types import Decimal
 from typing import Optional
 from datetime import date
 from uuid import UUID
 
 from app.schemas.enums import PaymentMethod, RecurrenceFrequency, OccurrenceStatus
-from app.schemas.personal import TransactionResponse
 
 
 class RecurringPaymentBase(BaseModel):
-    """Esquema base para un pago recurrente 
-    usando como campos:
-    nombre, 
-    la descripcion, 
-    el monto, la moneda, el metodo de pago, la frecuencia, la fecha de inicio, la fecha de fin, el dia del periodo, el recordatorio y si esta activo"""
     category_id: UUID
     credit_card_id: Optional[UUID] = None
-    name: str = Field(max_length=100)
+    name: str = Field(min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=200)
     amount: Decimal = Field(gt=0, decimal_places=2)
     currency: str = Field(default="MXN", min_length=3, max_length=3)
@@ -25,18 +19,33 @@ class RecurringPaymentBase(BaseModel):
     start_date: date
     end_date: Optional[date] = None
     day_of_period: int = Field(ge=1, le=31)
-    reminder_days_before: int = Field(default=3)
+    reminder_days_before: int = Field(default=3, ge=0, le=30)
     is_active: bool = True
 
+    @model_validator(mode="after")
+    def validate_dates_and_period(self) -> "RecurringPaymentBase":
+        # end_date debe ser posterior a start_date
+        if self.end_date and self.start_date and self.end_date <= self.start_date:
+            raise ValueError("end_date debe ser posterior a start_date.")
+
+        # Para frecuencias semanales el día del periodo es 1-7 (día de semana)
+        if self.frequency in (RecurrenceFrequency.weekly, RecurrenceFrequency.biweekly):
+            if self.day_of_period > 7:
+                raise ValueError(
+                    f"Para frecuencia '{self.frequency.value}' el día del periodo debe estar entre 1 y 7 (lunes=1 ... domingo=7)."
+                )
+
+        return self
+
+
 class RecurringPaymentCreate(RecurringPaymentBase):
-    """Esquema para crear un pago recurrente"""
     pass
 
+
 class RecurringPaymentUpdate(BaseModel):
-    """ Esquema base para la actualización de un pago recurrente"""
     category_id: Optional[UUID] = None
     credit_card_id: Optional[UUID] = None
-    name: Optional[str] = Field(None, max_length=100)
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=200)
     amount: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
     currency: Optional[str] = Field(None, min_length=3, max_length=3)
@@ -45,11 +54,17 @@ class RecurringPaymentUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     day_of_period: Optional[int] = Field(None, ge=1, le=31)
-    reminder_days_before: Optional[int] = Field(None)
+    reminder_days_before: Optional[int] = Field(None, ge=0, le=30)
     is_active: Optional[bool] = None
 
+    @model_validator(mode="after")
+    def validate_dates(self) -> "RecurringPaymentUpdate":
+        if self.end_date and self.start_date and self.end_date <= self.start_date:
+            raise ValueError("end_date debe ser posterior a start_date.")
+        return self
+
+
 class RecurringPaymentResponse(RecurringPaymentBase):
-    """ Esquema base para la respuesta de un pago recurrente"""
     id: UUID
     user_id: UUID
 
@@ -57,8 +72,6 @@ class RecurringPaymentResponse(RecurringPaymentBase):
 
 
 class OccurrenceResponse(BaseModel):
-    """ Esquema base para la respuesta de una ocurrencia tienedo los campos de la fecha, el estatus el monto y la transaccion real
-    pending, paid, skipped"""
     id: UUID
     recurring_payment_id: UUID
     scheduled_date: date
@@ -71,20 +84,27 @@ class OccurrenceResponse(BaseModel):
 
 
 class OccurrencePayRequest(BaseModel):
-    """ Esquema base para el pago de una ocurrencia"""
     amount_override: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
     notes: Optional[str] = Field(None, max_length=300)
 
 
 class UpcomingPaymentResponse(BaseModel):
-    """ Esquema base para la respuesta de un pago recurrente"""
-    # Asumimos una vista básica que devuelve id, recurring_payment_id, name, amount, date, status.
-    # El archivo de contexto menciona que devuelve occurrences pendientes ordenadas.
     occurrence_id: UUID
     recurring_payment_id: UUID
-    name: str
+    plan_name: Optional[str] = None   # alias para compatibilidad con la vista
+    name: Optional[str] = None        # nombre directo si la vista lo expone así
     scheduled_date: date
     amount: Decimal
     currency: str
+    status: OccurrenceStatus = OccurrenceStatus.pending
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @model_validator(mode="after")
+    def normalize_name(self) -> "UpcomingPaymentResponse":
+        # La vista puede devolver el nombre como 'name' o 'plan_name'
+        if not self.name and self.plan_name:
+            self.name = self.plan_name
+        elif not self.plan_name and self.name:
+            self.plan_name = self.name
+        return self

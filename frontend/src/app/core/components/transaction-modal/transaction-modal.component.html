@@ -9,8 +9,12 @@
     <!-- Header -->
     <div class="px-6 pt-6 pb-4 flex justify-between items-center border-b border-outline-variant/10">
       <div>
-        <h3 class="text-xl font-headline font-bold text-on-surface tracking-tight uppercase">New Log Entry</h3>
-        <p class="font-label text-[10px] text-primary tracking-[0.2em] uppercase mt-0.5">VAULT_TRANSACTION_INIT</p>
+        <h3 class="text-xl font-headline font-bold text-on-surface tracking-tight uppercase">
+          {{ isEditMode() ? 'Edit Ledger Entry' : 'New Log Entry' }}
+        </h3>
+        <p class="font-label text-[10px] text-primary tracking-[0.2em] uppercase mt-0.5">
+          {{ isEditMode() ? 'VAULT_TRANSACTION_UPDATE' : 'VAULT_TRANSACTION_INIT' }}
+        </p>
       </div>
       <button (click)="close()" class="text-on-surface-variant hover:text-primary transition-colors">
         <span class="material-symbols-outlined">close</span>
@@ -189,6 +193,12 @@
             </div>
         </div>
       }
+      <!-- Notes -->
+      <div class="space-y-1">
+        <label class="font-label text-[9px] text-on-surface-variant uppercase tracking-[0.2em] px-1">Additional Notes (Optional)</label>
+        <textarea formControlName="notes" placeholder="Metadata or specific details..."
+          class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-none h-20"></textarea>
+      </div>
 
       <!-- Submit -->
       <div class="pt-4">
@@ -196,9 +206,9 @@
           class="w-full py-4 bg-primary text-on-primary font-label text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3">
           @if (isLoading()) {
             <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-on-primary"></span>
-            Authenticating...
+            Processing...
           } @else {
-            {{ transactionForm.get('type')?.value === 'income' ? 'Record Income' : 'Authorize Transaction' }}
+            {{ isEditMode() ? 'Confirm Changes' : (transactionForm.get('type')?.value === 'income' ? 'Record Income' : 'Authorize Transaction') }}
           }
         </button>
         <p class="text-center text-[9px] font-label text-on-surface-variant/50 uppercase tracking-widest mt-4">

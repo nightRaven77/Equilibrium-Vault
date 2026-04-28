@@ -24,9 +24,9 @@ def get_personal_service(supabase: Client = Depends(get_current_user_supplier)):
 def get_personal_transactions(supabase: Client = Depends(get_current_user_supplier)):
     """
     Lista todas las transacciones personales del usuario autenticado.
-    El filtrado por usuario se aplica automáticamente gracias al RLS de Supabase.
+    Se incluye información de la categoría (nombre, icono, color).
     """
-    response = supabase.table("personal_transactions").select("*").execute()
+    response = supabase.table("personal_transactions").select("*, categories(name, icon, color)").order("transaction_date", desc=True).execute()
     return response.data
 
 

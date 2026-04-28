@@ -8,6 +8,8 @@ import {
   CoupleBalance,
   CoupleTransaction,
   Couple,
+  CoupleCreate,
+  CoupleUpdate,
   CreditCard,
   SavingGoalSummary,
   SavingGoal,
@@ -64,8 +66,38 @@ export class FinanceService {
   /**
    * Obtiene las transacciones conjuntas de la pareja
    */
-  getCoupleTransactions(coupleId: string): Observable<CoupleTransaction[]> {
-    return this.http.get<CoupleTransaction[]>(`${this.apiUrl}/couples/${coupleId}/transactions`);
+  getCoupleTransactions(coupleId: string, status?: string): Observable<CoupleTransaction[]> {
+    const params = status ? `?status=${status}` : '';
+    return this.http.get<CoupleTransaction[]>(`${this.apiUrl}/couples/${coupleId}/transactions${params}`);
+  }
+
+  /** Busca un perfil por email para obtener UUID + nombre (para vincular pareja) */
+  searchProfile(email: string): Observable<{ id: string; full_name: string }> {
+    return this.http.get<{ id: string; full_name: string }>(
+      `${this.apiUrl}/couples/search-profile?email=${encodeURIComponent(email)}`
+    );
+  }
+
+  /** Crea un nuevo vínculo de pareja */
+  createCouple(data: CoupleCreate): Observable<Couple> {
+    return this.http.post<Couple>(`${this.apiUrl}/couples/`, data);
+  }
+
+  /** Actualiza nombre o estado del vínculo */
+  updateCouple(coupleId: string, data: CoupleUpdate): Observable<Couple> {
+    return this.http.patch<Couple>(`${this.apiUrl}/couples/${coupleId}`, data);
+  }
+
+  /** Liquida una transacción compartida individual */
+  settleTransaction(coupleId: string, txId: string): Observable<CoupleTransaction> {
+    return this.http.patch<CoupleTransaction>(`${this.apiUrl}/couples/${coupleId}/transactions/${txId}/settle`, {});
+  }
+
+  /** Liquida todas las transacciones pendientes del vínculo */
+  settleAllTransactions(coupleId: string): Observable<{ settled_count: number; message: string }> {
+    return this.http.patch<{ settled_count: number; message: string }>(
+      `${this.apiUrl}/couples/${coupleId}/transactions/settle-all`, {}
+    );
   }
 
   /**
@@ -92,8 +124,8 @@ export class FinanceService {
   /**
    * Elimina (soft-delete) una tarjeta de crédito
    */
-  deleteCreditCard(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/cards/${id}`, { responseType: 'text' as 'json' });
+  deleteCreditCard(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cards/${id}`);
   }
 
   /**
@@ -145,6 +177,20 @@ export class FinanceService {
    */
   createTransaction(data: TransactionCreate): Observable<Transaction> {
     return this.http.post<Transaction>(`${this.apiUrl}/personal/`, data);
+  }
+
+  /**
+   * Actualiza una transacción personal
+   */
+  updateTransaction(id: string, data: any): Observable<Transaction> {
+    return this.http.patch<Transaction>(`${this.apiUrl}/personal/${id}`, data);
+  }
+
+  /**
+   * Elimina una transacción personal
+   */
+  deleteTransaction(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/personal/${id}`);
   }
 
   /**

@@ -64,22 +64,31 @@
 
         <!-- Acciones -->
         <div class="flex flex-col gap-2 mt-4">
-          <button type="submit" 
+          <button type="submit"
                   [disabled]="payForm.invalid || isSaving()"
-                  class="w-full py-3.5 rounded-2xl bg-tertiary text-on-tertiary font-semibold hover:bg-tertiary-container disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-tertiary/20 flex items-center justify-center gap-2">
+                  class="w-full py-3.5 rounded-2xl bg-primary text-on-primary font-label text-xs font-bold tracking-widest uppercase hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all status-glow flex items-center justify-center gap-2">
             @if (isSaving()) {
-              <span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+              <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
               Procesando...
             } @else {
+              <span class="material-symbols-outlined text-[18px]">check_circle</span>
               Confirmar Pago
             }
           </button>
-          
-          <button type="button" 
-                  (click)="close()"
-                  class="w-full py-3 rounded-2xl text-on-surface-variant hover:bg-white/5 font-medium transition-colors">
-            Cancelar
-          </button>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button"
+                    (click)="onSkip()"
+                    [disabled]="isSaving()"
+                    class="py-2.5 rounded-xl border border-outline-variant/30 text-on-surface-variant font-label text-[10px] tracking-widest uppercase hover:bg-surface-container-high transition-colors disabled:opacity-40">
+              Omitir pago
+            </button>
+            <button type="button"
+                    (click)="close()"
+                    class="py-2.5 rounded-xl border border-outline-variant/30 text-on-surface-variant font-label text-[10px] tracking-widest uppercase hover:bg-surface-container-high transition-colors">
+              Cancelar
+            </button>
+          </div>
         </div>
 
       </form>

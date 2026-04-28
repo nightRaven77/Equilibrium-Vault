@@ -146,17 +146,17 @@
           <span>Standard</span>
           <span>Architect</span>
         </div>
-        <p class="text-xs leading-relaxed text-on-surface-variant font-medium">
-          "Your financial node is operating at 94% efficiency. Credit utilization remains below optimal threshold."
+        <p class="text-xs leading-relaxed text-on-surface-variant font-medium italic">
+          "{{ integrityInsights().message }}"
         </p>
         <div class="pt-4 grid grid-cols-2 gap-3 text-[10px] font-label uppercase tracking-widest font-bold">
-            <div class="p-3 bg-surface-container-highest rounded-lg border border-outline-variant/10">
-                <p class="text-primary mb-1">Health</p>
-                <p>Excellent</p>
+            <div class="p-3 bg-surface-container-highest/50 rounded-lg border border-outline-variant/10 group-hover:bg-surface-container-highest transition-colors">
+                <p class="text-primary mb-1 opacity-60">Health</p>
+                <p [class]="integrityInsights().healthClass">{{ integrityInsights().health }}</p>
             </div>
-            <div class="p-3 bg-surface-container-highest rounded-lg border border-outline-variant/10">
-                <p class="text-primary mb-1">Risk</p>
-                <p>Minimum</p>
+            <div class="p-3 bg-surface-container-highest/50 rounded-lg border border-outline-variant/10 group-hover:bg-surface-container-highest transition-colors">
+                <p class="text-primary mb-1 opacity-60">Risk</p>
+                <p [class]="integrityInsights().riskClass">{{ integrityInsights().risk }}</p>
             </div>
         </div>
       </div>

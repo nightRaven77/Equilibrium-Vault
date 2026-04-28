@@ -49,9 +49,15 @@ class TransactionUpdate(BaseModel):
     transaction_date: Optional[date] = None
 
 
+class CategorySummary(BaseModel):
+    name: str
+    icon: Optional[str] = None
+    color: Optional[str] = None
+
 class TransactionResponse(TransactionBase):
     id: UUID
     user_id: UUID
+    categories: Optional[CategorySummary] = None
 
     model_config = ConfigDict(from_attributes=True)
 

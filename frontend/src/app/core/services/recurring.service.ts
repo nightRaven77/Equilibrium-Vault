@@ -8,50 +8,52 @@ import {
   RecurringPaymentUpdate,
   Occurrence,
   OccurrencePayRequest,
-  UpcomingPayment
+  UpcomingPayment,
 } from '../models/finance.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class RecurringService {
   private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
-  private readonly RECURRING_ENDPOINT = `${this.apiUrl}/recurring`;
+  private readonly base = `${environment.apiUrl}/recurring`;
 
-  // Obtiene las plantillas activas
-  getRecurringPayments(): Observable<RecurringPayment[]> {
-    return this.http.get<RecurringPayment[]>(this.RECURRING_ENDPOINT);
+  getRecurringPayments(activeOnly = true): Observable<RecurringPayment[]> {
+    return this.http.get<RecurringPayment[]>(`${this.base}?active_only=${activeOnly}`);
   }
 
-  // Obtiene las ocurrencias pendientes próximas (vista global)
   getUpcomingPayments(): Observable<UpcomingPayment[]> {
-    return this.http.get<UpcomingPayment[]>(`${this.RECURRING_ENDPOINT}/upcoming`);
+    return this.http.get<UpcomingPayment[]>(`${this.base}/upcoming`);
   }
 
-  // Crea una nueva plantilla
+  getRecurringPayment(id: string): Observable<RecurringPayment> {
+    return this.http.get<RecurringPayment>(`${this.base}/${id}`);
+  }
+
   createRecurringPayment(plan: RecurringPaymentCreate): Observable<RecurringPayment> {
-    return this.http.post<RecurringPayment>(this.RECURRING_ENDPOINT, plan);
+    return this.http.post<RecurringPayment>(this.base, plan);
   }
 
-  // Actualiza una plantilla existente
   updateRecurringPayment(id: string, plan: RecurringPaymentUpdate): Observable<RecurringPayment> {
-    return this.http.patch<RecurringPayment>(`${this.RECURRING_ENDPOINT}/${id}`, plan);
+    return this.http.patch<RecurringPayment>(`${this.base}/${id}`, plan);
   }
 
-  // Soft-delete de una plantilla
   deleteRecurringPayment(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.RECURRING_ENDPOINT}/${id}`);
+    return this.http.delete<void>(`${this.base}/${id}`);
   }
 
-  // Obtiene el historial de ocurrencias de una plantilla específica
-  getOccurrences(id: string): Observable<Occurrence[]> {
-    return this.http.get<Occurrence[]>(`${this.RECURRING_ENDPOINT}/${id}/occurrences`);
+  restoreRecurringPayment(id: string): Observable<RecurringPayment> {
+    return this.http.post<RecurringPayment>(`${this.base}/${id}/restore`, {});
   }
 
-  // Paga una ocurrencia específica
+  getOccurrences(id: string, status?: string): Observable<Occurrence[]> {
+    const params = status ? `?status=${status}` : '';
+    return this.http.get<Occurrence[]>(`${this.base}/${id}/occurrences${params}`);
+  }
+
   payOccurrence(occurrenceId: string, req: OccurrencePayRequest): Observable<Occurrence> {
-    return this.http.post<Occurrence>(`${this.RECURRING_ENDPOINT}/occurrences/${occurrenceId}/pay`, req);
+    return this.http.post<Occurrence>(`${this.base}/occurrences/${occurrenceId}/pay`, req);
+  }
+
+  skipOccurrence(occurrenceId: string): Observable<Occurrence> {
+    return this.http.post<Occurrence>(`${this.base}/occurrences/${occurrenceId}/skip`, {});
   }
 }
-

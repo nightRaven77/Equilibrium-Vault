@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { FinanceService } from '../../services/finance.service';
 import { RefreshService } from '../../services/refresh.service';
 import { AuthService } from '../../services/auth.service';
+import { AlertService } from '../../services/alert.service';
 import { Category, CreditCard, Couple } from '../../models/finance.model';
 
 @Component({
@@ -18,6 +19,7 @@ export class TransactionModalComponent implements OnInit {
   private financeService = inject(FinanceService);
   private refreshService = inject(RefreshService);
   private authService = inject(AuthService);
+  private alertService = inject(AlertService);
   public modalService = inject(ModalService);
 
   // Formulario Reactivo
@@ -29,12 +31,13 @@ export class TransactionModalComponent implements OnInit {
   public couples = signal<Couple[]>([]);
   public isLoading = signal<boolean>(false);
 
+  public isEditMode = computed(() => !!this.modalService.selectedTransaction());
+
   public filteredCategories = computed(() => {
     const type = this.transactionForm?.get('type')?.value;
     return this.categories().filter((c) => c.type === type);
   });
 
-  // Cálculo de mensualidad MSI en tiempo real
   public monthlyInstallment = computed(() => {
     const amount = this.transactionForm?.get('amount')?.value || 0;
     const months = this.transactionForm?.get('installment_months')?.value || 1;
@@ -43,6 +46,26 @@ export class TransactionModalComponent implements OnInit {
     if (!isMSI || amount <= 0 || months <= 1) return null;
     return amount / months;
   });
+
+  constructor() {
+    effect(() => {
+      const tx = this.modalService.selectedTransaction();
+      if (tx && this.transactionForm) {
+        this.transactionForm.patchValue({
+          amount: tx.amount,
+          description: tx.description,
+          category_id: tx.category_id,
+          type: tx.type,
+          payment_method: tx.payment_method,
+          credit_card_id: tx.credit_card_id,
+          transaction_date: tx.transaction_date,
+          notes: tx.notes,
+          is_installment: tx.is_installment || false,
+          installment_months: tx.installment_months
+        });
+      }
+    });
+  }
 
   ngOnInit() {
     this.initForm();
@@ -64,9 +87,9 @@ export class TransactionModalComponent implements OnInit {
       user2_share_pct: [50],
       is_installment: [false],
       installment_months: [null],
+      notes: ['']
     });
 
-    // Validaciones condicionales para tarjetas de crédito
     this.transactionForm.get('payment_method')?.valueChanges.subscribe((method) => {
       const cardControl = this.transactionForm.get('credit_card_id');
       if (method === 'credit_card') {
@@ -74,13 +97,11 @@ export class TransactionModalComponent implements OnInit {
       } else {
         cardControl?.clearValidators();
         cardControl?.setValue(null);
-        // Al quitar tarjeta de crédito, quitamos MSI
         this.transactionForm.get('is_installment')?.setValue(false);
       }
       cardControl?.updateValueAndValidity();
     });
 
-    // Validaciones condicionales para MSI
     this.transactionForm.get('is_installment')?.valueChanges.subscribe((isMSI) => {
       const monthsControl = this.transactionForm.get('installment_months');
       if (isMSI) {
@@ -93,12 +114,10 @@ export class TransactionModalComponent implements OnInit {
       monthsControl?.updateValueAndValidity();
     });
 
-    // Validaciones condicionales para gastos compartidos
     this.transactionForm.get('is_shared')?.valueChanges.subscribe((isShared) => {
       const coupleControl = this.transactionForm.get('couple_id');
       if (isShared) {
         coupleControl?.setValidators([Validators.required]);
-        // Si hay una pareja disponible, la seleccionamos por defecto
         if (this.couples().length > 0 && !coupleControl?.value) {
           coupleControl?.setValue(this.couples()[0].id);
         }
@@ -109,19 +128,16 @@ export class TransactionModalComponent implements OnInit {
       coupleControl?.updateValueAndValidity();
     });
 
-    // Lógica específica para Income (Ingresos)
     this.transactionForm.get('type')?.valueChanges.subscribe((type) => {
       if (type === 'income') {
-        // Los ingresos no se comparten en esta versión para mantener integridad de deudas
         this.transactionForm.get('is_shared')?.setValue(false);
         this.financeService.getCategories('income').subscribe((data) => this.categories.set(data));
-
-        // Si el método era tarjeta de crédito, lo cambiamos a transferencia
         if (this.transactionForm.get('payment_method')?.value === 'credit_card') {
           this.transactionForm.get('payment_method')?.setValue('transfer');
         }
+      } else {
+        this.financeService.getCategories('expense').subscribe((data) => this.categories.set(data));
       }
-      // Limpiar categoría al cambiar de tipo para forzar nueva selección válida
       this.transactionForm.get('category_id')?.setValue('');
     });
   }
@@ -152,9 +168,32 @@ export class TransactionModalComponent implements OnInit {
 
     this.isLoading.set(true);
     const formValues = this.transactionForm.value;
+    const tx = this.modalService.selectedTransaction();
+
+    if (this.isEditMode() && tx) {
+      // Update logic
+      const payload = {
+        category_id: formValues.category_id,
+        credit_card_id: formValues.credit_card_id,
+        amount: formValues.amount,
+        type: formValues.type,
+        payment_method: formValues.payment_method,
+        description: formValues.description,
+        transaction_date: formValues.transaction_date,
+        notes: formValues.notes
+      };
+
+      this.financeService.updateTransaction(tx.id, payload).subscribe({
+        next: () => {
+          this.alertService.success('Transacción Actualizada', 'Los cambios se han guardado correctamente.');
+          this.handleSuccess();
+        },
+        error: (err) => this.handleError(err),
+      });
+      return;
+    }
 
     if (formValues.is_shared) {
-      // Flujo de transacción compartida (Couples)
       const payload = {
         category_id: formValues.category_id,
         credit_card_id: formValues.credit_card_id,
@@ -168,11 +207,13 @@ export class TransactionModalComponent implements OnInit {
       };
 
       this.financeService.createCoupleTransaction(formValues.couple_id, payload).subscribe({
-        next: () => this.handleSuccess(),
+        next: () => {
+          this.alertService.success('Gasto Compartido', 'El gasto se ha registrado correctamente.');
+          this.handleSuccess();
+        },
         error: (err) => this.handleError(err),
       });
     } else {
-      // Flujo de transacción personal
       const payload = {
         category_id: formValues.category_id,
         credit_card_id: formValues.credit_card_id,
@@ -183,10 +224,14 @@ export class TransactionModalComponent implements OnInit {
         transaction_date: formValues.transaction_date,
         is_installment: formValues.is_installment,
         installment_months: formValues.installment_months,
+        notes: formValues.notes
       };
 
       this.financeService.createTransaction(payload).subscribe({
-        next: () => this.handleSuccess(),
+        next: () => {
+          this.alertService.success('Transacción Registrada', 'La transacción se ha guardado correctamente.');
+          this.handleSuccess();
+        },
         error: (err) => this.handleError(err),
       });
     }
@@ -201,6 +246,6 @@ export class TransactionModalComponent implements OnInit {
   private handleError(err: any) {
     this.isLoading.set(false);
     console.error('Error saving transaction:', err);
-    alert('Failed to save transaction. Please try again.');
+    this.alertService.error('Error', 'No se pudo guardar la transacción.');
   }
 }

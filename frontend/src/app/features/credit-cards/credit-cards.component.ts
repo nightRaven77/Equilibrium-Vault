@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, effect, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -39,6 +39,66 @@ export class CreditCardsComponent implements OnInit {
   public totalCreditLimit = signal<number>(0);
   public totalBalance = signal<number>(0);
   public utilizationOptions = signal<EChartsOption>({});
+
+  public creditUtilizationPct = computed(() => {
+    const limit = this.totalCreditLimit();
+    const balance = this.totalBalance();
+    return limit > 0 ? (balance / limit) * 100 : 0;
+  });
+
+  public integrityInsights = computed(() => {
+    const pct = this.creditUtilizationPct();
+    if (this.cards().length === 0) {
+      return {
+        message: "No financial nodes detected. Provision a credit node to begin integrity monitoring.",
+        health: "Offline",
+        risk: "N/A",
+        healthClass: "text-on-surface-variant/40",
+        riskClass: "text-on-surface-variant/40"
+      };
+    }
+    if (pct === 0) {
+      return {
+        message: "Your financial nodes are dormant. Strategic credit usage can improve your credit profile over time.",
+        health: "Stable",
+        risk: "Null",
+        healthClass: "text-primary",
+        riskClass: "text-primary"
+      };
+    } else if (pct < 30) {
+      return {
+        message: `Your financial node is operating at ${ (100 - pct).toFixed(0) }% efficiency. Credit utilization remains below optimal threshold.`,
+        health: "Excellent",
+        risk: "Minimum",
+        healthClass: "text-[#47EAED]",
+        riskClass: "text-[#47EAED]"
+      };
+    } else if (pct < 50) {
+      return {
+        message: "Liquidity architecture is under moderate load. Consider consolidating balances to maintain peak efficiency.",
+        health: "Good",
+        risk: "Low",
+        healthClass: "text-yellow-400",
+        riskClass: "text-yellow-400"
+      };
+    } else if (pct < 75) {
+      return {
+        message: "System warning: High utilization detected. Risk of credit score impact is increasing. Strategic repayment recommended.",
+        health: "Fair",
+        risk: "Moderate",
+        healthClass: "text-orange-500",
+        riskClass: "text-orange-500"
+      };
+    } else {
+      return {
+        message: "CRITICAL: Near-maximum capacity reached. Debt-to-limit ratio exceeds safety parameters. Immediate action required.",
+        health: "Poor",
+        risk: "High",
+        healthClass: "text-error",
+        riskClass: "text-error"
+      };
+    }
+  });
 
   ngOnInit() {
     this.fetchCards();
@@ -148,9 +208,13 @@ export class CreditCardsComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error deleting card:', err);
-          if (err.status === 400 && err.error && err.error.detail) {
-            const code = err.error.detail.code;
-            const message = err.error.detail.message;
+          
+          // Extraemos el detalle del error de forma segura
+          const errorDetail = err.error?.detail;
+          
+          if (err.status === 400 && errorDetail) {
+            const code = typeof errorDetail === 'object' ? errorDetail.code : null;
+            const message = typeof errorDetail === 'object' ? errorDetail.message : errorDetail;
 
             if (code === 'HAS_RECURRING') {
               this.alertService
@@ -166,19 +230,15 @@ export class CreditCardsComponent implements OnInit {
                   }
                 });
             } else {
+              // Maneja HAS_DEBT, HAS_INSTALLMENTS y cualquier otro 400 estructurado
               this.alertService.error('No se puede eliminar', message);
             }
-          } else if (err.status === 404 || err.status === 204 || err.status === 200) {
-            this.alertService.success(
-              '¡Tarjeta eliminada!',
-              'La tarjeta ha sido desactivada correctamente.',
-            );
-            this.refreshService.triggerRefresh();
+          } else if (err.status === 404) {
+            this.alertService.error('Error', 'La tarjeta no fue encontrada.');
           } else {
-            this.alertService.error(
-              'Error inesperado',
-              'Ocurrió un error al intentar eliminar la tarjeta.',
-            );
+            // Fallback para errores genéricos o sin detalle estructurado
+            const genericMessage = typeof errorDetail === 'string' ? errorDetail : 'Ocurrió un error al intentar eliminar la tarjeta.';
+            this.alertService.error('Error inesperado', genericMessage);
           }
         },
       });

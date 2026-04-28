@@ -5,15 +5,13 @@ import { ModalService } from '../../../core/services/modal.service';
 import { FinanceService } from '../../../core/services/finance.service';
 import { RecurringService } from '../../../core/services/recurring.service';
 import { RefreshService } from '../../../core/services/refresh.service';
+import { AlertService } from '../../../core/services/alert.service';
 import { Category, CreditCard, RecurringPaymentCreate, RecurringPaymentUpdate } from '../../../core/models/finance.model';
 
 @Component({
   selector: 'app-recurring-plan-modal',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './recurring-plan-modal.component.html'
 })
 export class RecurringPlanModalComponent implements OnInit {
@@ -22,6 +20,7 @@ export class RecurringPlanModalComponent implements OnInit {
   private financeService = inject(FinanceService);
   private recurringService = inject(RecurringService);
   private refreshService = inject(RefreshService);
+  private alertService = inject(AlertService);
 
   public isOpen = this.modalService.isRecurringPlanModalOpen;
   private planId = this.modalService.selectedRecurringPlanId;
@@ -32,22 +31,22 @@ export class RecurringPlanModalComponent implements OnInit {
   public isEditing = signal<boolean>(false);
 
   public planForm = this.fb.group({
-    name: ['', [Validators.required]],
-    category_id: ['', [Validators.required]],
+    name: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
+    category_id: ['', Validators.required],
     credit_card_id: [''],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
-    payment_method: ['credit_card', [Validators.required]],
-    frequency: ['monthly', [Validators.required]],
+    amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    payment_method: ['credit_card', Validators.required],
+    frequency: ['monthly', Validators.required],
     day_of_period: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
-    start_date: [new Date().toISOString().split('T')[0], [Validators.required]],
-    notes: ['']
+    start_date: [new Date().toISOString().split('T')[0], Validators.required],
+    end_date: [''],
+    notes: [''],
   });
 
   constructor() {
     effect(() => {
       const open = this.isOpen();
       const id = this.planId();
-      
       if (open) {
         if (id) {
           this.isEditing.set(true);
@@ -58,7 +57,7 @@ export class RecurringPlanModalComponent implements OnInit {
             payment_method: 'credit_card',
             frequency: 'monthly',
             day_of_period: 1,
-            start_date: new Date().toISOString().split('T')[0]
+            start_date: new Date().toISOString().split('T')[0],
           });
         }
       }
@@ -71,101 +70,88 @@ export class RecurringPlanModalComponent implements OnInit {
   }
 
   loadPlan(id: string) {
-    this.recurringService.getRecurringPayments().subscribe(plans => {
-      const plan = plans.find(p => p.id === id);
-      if (plan) {
+    this.recurringService.getRecurringPayment(id).subscribe({
+      next: (plan) => {
         this.planForm.patchValue({
           name: plan.name,
           category_id: plan.category_id,
-          credit_card_id: plan.credit_card_id,
+          credit_card_id: plan.credit_card_id ?? '',
           amount: plan.amount,
           payment_method: plan.payment_method,
           frequency: plan.frequency,
           day_of_period: plan.day_of_period,
           start_date: plan.start_date,
-          notes: plan.description
+          end_date: plan.end_date ?? '',
+          notes: plan.description ?? '',
         });
-      }
+      },
+      error: () => this.alertService.error('Error', 'No se pudo cargar el plan.'),
     });
   }
 
-  close() {
-    this.modalService.closeRecurringPlanModal();
-  }
+  close() { this.modalService.closeRecurringPlanModal(); }
 
   onSubmit() {
-    if (this.planForm.invalid) return;
-
+    if (this.planForm.invalid) { this.planForm.markAllAsTouched(); return; }
+    const v = this.planForm.value;
     this.isSaving.set(true);
-    const formValue = this.planForm.value;
 
-    if (this.isEditing() && this.planId()) {
-      const dto: RecurringPaymentUpdate = {
-        name: formValue.name!,
-        category_id: formValue.category_id!,
-        credit_card_id: formValue.credit_card_id || null,
-        amount: Number(formValue.amount),
-        payment_method: formValue.payment_method!,
-        frequency: formValue.frequency as any,
-        day_of_period: Number(formValue.day_of_period),
-        start_date: formValue.start_date!,
-        description: formValue.notes || null,
-      };
+    const base = {
+      name: v.name!,
+      category_id: v.category_id!,
+      credit_card_id: v.credit_card_id || null,
+      amount: Number(v.amount),
+      payment_method: v.payment_method!,
+      frequency: v.frequency as any,
+      day_of_period: Number(v.day_of_period),
+      start_date: v.start_date!,
+      end_date: v.end_date || null,
+      description: v.notes || null,
+    };
 
-      this.recurringService.updateRecurringPayment(this.planId()!, dto).subscribe({
-        next: () => {
-          this.refreshService.triggerRefresh();
-          this.isSaving.set(false);
-          this.close();
-        },
-        error: (err) => {
-          console.error(err);
-          this.isSaving.set(false);
-        }
-      });
-    } else {
-      const dto: RecurringPaymentCreate = {
-        name: formValue.name!,
-        category_id: formValue.category_id!,
-        credit_card_id: formValue.credit_card_id || null,
-        amount: Number(formValue.amount),
-        payment_method: formValue.payment_method!,
-        frequency: formValue.frequency as any,
-        day_of_period: Number(formValue.day_of_period),
-        start_date: formValue.start_date!,
-        description: formValue.notes || null,
-      };
+    const action$ = this.isEditing() && this.planId()
+      ? this.recurringService.updateRecurringPayment(this.planId()!, base as RecurringPaymentUpdate)
+      : this.recurringService.createRecurringPayment(base as RecurringPaymentCreate);
 
-      this.recurringService.createRecurringPayment(dto).subscribe({
-        next: () => {
-          this.refreshService.triggerRefresh();
-          this.isSaving.set(false);
-          this.close();
-        },
-        error: (err) => {
-          console.error(err);
-          this.isSaving.set(false);
-        }
-      });
-    }
+    action$.subscribe({
+      next: () => {
+        this.alertService.success(
+          this.isEditing() ? 'Actualizada' : '¡Creada!',
+          this.isEditing() ? 'La suscripción fue actualizada.' : 'La suscripción fue creada y sus ocurrencias generadas.'
+        );
+        this.refreshService.triggerRefresh();
+        this.isSaving.set(false);
+        this.close();
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al guardar.';
+        this.alertService.error('No se pudo guardar', msg);
+      },
+    });
   }
 
   deletePlan() {
-    if (confirm('¿Estás seguro de eliminar esta suscripción?')) {
-      if (this.planId()) {
-        this.isSaving.set(true);
-        this.recurringService.deleteRecurringPayment(this.planId()!).subscribe({
-          next: () => {
-            this.refreshService.triggerRefresh();
-            this.isSaving.set(false);
-            this.close();
-          },
-          error: (err) => {
-            console.error(err);
-            this.isSaving.set(false);
-          }
-        });
-      }
-    }
+    if (!this.planId()) return;
+    this.alertService.confirm(
+      '¿Eliminar suscripción?',
+      'La suscripción se desactivará. El historial de pagos se conservará.',
+    ).then(confirmed => {
+      if (!confirmed) return;
+      this.isSaving.set(true);
+      this.recurringService.deleteRecurringPayment(this.planId()!).subscribe({
+        next: () => {
+          this.alertService.success('Eliminada', 'La suscripción fue eliminada.');
+          this.refreshService.triggerRefresh();
+          this.isSaving.set(false);
+          this.close();
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al eliminar.';
+          this.alertService.error('Error', msg);
+        },
+      });
+    });
   }
 }

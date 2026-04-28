@@ -1,168 +1,188 @@
-<div class="max-w-7xl mx-auto">
-  <!-- Hero Stats Row -->
+<div class="max-w-7xl mx-auto pb-12">
+  <!-- Header: Stats & Quick Overview -->
   <div class="grid grid-cols-12 gap-6 mb-8">
-    <!-- Total Net Worth -->
-    <div class="col-span-12 lg:col-span-7 bg-surface-container-low p-6 md:p-8 relative overflow-hidden group rounded-xl border border-[#3B4949]/30 shadow-lg shadow-black/20">
-      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-        <span class="material-symbols-outlined text-7xl md:text-9xl text-primary">account_balance</span>
-      </div>
+    
+    <!-- main card: Total Balance -->
+    <div class="col-span-12 lg:col-span-8 bg-surface-container-low p-8 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden group">
+      <!-- Glow effect -->
+      <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700"></div>
+      
       <div class="relative z-10">
-        <h2 class="font-label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase mb-2">Total Combined Net Worth</h2>
-        <div class="flex items-baseline gap-4">
-          <span class="font-headline text-4xl md:text-5xl font-bold tracking-tighter text-on-surface">{{ netWorth() | currency:'USD' }}</span>
-          <div class="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-            <span class="material-symbols-outlined text-sm">trending_up</span>
-            <span class="font-label text-[10px] font-bold">+4.2%</span>
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h2 class="font-label text-[10px] tracking-[0.3em] text-primary uppercase font-bold mb-1">Combined Portfolio Value</h2>
+            <p class="font-headline text-5xl font-bold tracking-tighter text-on-surface flex items-center gap-3">
+              {{ netWorth() | currency:'USD' }}
+              <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
+            </p>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Cycle Performance</span>
+            <div class="flex items-center gap-1.5 text-[#47EAED] bg-[#47EAED]/10 px-3 py-1 rounded-full border border-[#47EAED]/20 shadow-[0_0_15px_rgba(71,234,237,0.1)]">
+              <span class="material-symbols-outlined text-[14px] font-bold">trending_up</span>
+              <span class="font-label text-[11px] font-bold">+12.5%</span>
+            </div>
           </div>
         </div>
-        <p class="font-body text-sm text-on-surface-variant mt-4 max-w-md opacity-70">
-          Growth of <span class="text-on-surface font-semibold">$58,210.00</span> against previous cycle benchmarks. Vault integrity remains optimal.
-        </p>
-        <div class="flex gap-1.5 items-end h-16 mt-8">
-          <div class="w-full bg-primary/20 h-[30%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[45%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[40%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[60%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[55%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[80%] rounded-t-sm"></div>
-          <div class="w-full bg-primary/20 h-[70%] rounded-t-sm"></div>
-          <div class="w-full bg-primary h-[90%] status-glow rounded-t-sm"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+            <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-1">Income (Current Month)</p>
+            <p class="font-headline text-xl font-bold text-[#47EAED]">{{ monthlyIncome() | currency:'USD' }}</p>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+            <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-1">Expenses (Current Month)</p>
+            <p class="font-headline text-xl font-bold text-[#FF5E5E]">{{ monthlyExpense() | currency:'USD' }}</p>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col justify-center">
+            <div class="flex gap-1 items-end h-8">
+              @for (h of sparklineData(); track $index) {
+                <div class="w-full bg-primary/20 rounded-t-[1px] transition-all duration-700" [style.height.%]="h"></div>
+              }
+            </div>
+            <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mt-2">Active Trend</p>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Quick Actions / Status -->
-    <div class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-4">
-      <div class="bg-surface-container p-6 rounded-xl border border-[#3B4949]/30 flex flex-col justify-between hover:bg-surface-container-high transition-colors cursor-pointer">
-        <span class="material-symbols-outlined text-primary mb-4">security</span>
-        <div>
-          <p class="font-label text-[10px] tracking-widest text-on-surface-variant uppercase">Vault Status</p>
-          <p class="font-headline text-xl font-medium mt-1">ENCRYPTED</p>
+
+    <!-- Right Column: Secondary Stats -->
+    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+      <div class="bg-surface-container rounded-3xl p-6 border border-white/5 flex-1 hover:bg-surface-container-high transition-all cursor-pointer group">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary">payments</span>
+          </div>
+          <span class="material-symbols-outlined text-on-surface-variant text-[18px]">arrow_outward</span>
+        </div>
+        <p class="font-label text-[10px] tracking-widest text-on-surface-variant uppercase">Next Bills Due</p>
+        <div class="mt-4 space-y-3">
+          @if (upcoming().length === 0) {
+            <p class="text-xs text-on-surface-variant opacity-50">No pending bills</p>
+          } @else {
+            @for (bill of upcoming(); track bill.occurrence_id) {
+              <div class="flex justify-between items-center bg-white/5 p-2 px-3 rounded-xl border border-white/5">
+                <span class="text-xs font-medium text-on-surface truncate pr-2">{{ bill.plan_name }}</span>
+                <span class="text-xs font-bold text-on-surface-variant">{{ bill.amount | currency:'USD' }}</span>
+              </div>
+            }
+          }
         </div>
       </div>
-      <div class="bg-surface-container p-6 rounded-xl border border-[#3B4949]/30 flex flex-col justify-between hover:bg-surface-container-high transition-colors cursor-pointer">
-        <span class="material-symbols-outlined text-primary mb-4">bolt</span>
-        <div>
-          <p class="font-label text-[10px] tracking-widest text-on-surface-variant uppercase">Active Yield</p>
-          <p class="font-headline text-xl font-medium mt-1">5.25% APY</p>
+
+      <div class="bg-surface-container rounded-3xl p-6 border border-white/5 flex-1 hover:bg-surface-container-high transition-all cursor-pointer group">
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-primary">bolt</span>
+          </div>
         </div>
-      </div>
-      <div class="col-span-2 bg-surface-container-lowest rounded-xl p-6 border border-primary/20 shadow-[0_0_15px_rgba(71,234,237,0.05)] flex items-center justify-between cursor-pointer">
-        <div>
-          <p class="font-headline text-sm font-bold tracking-widest uppercase text-primary">Precision Report</p>
-          <p class="font-body text-xs text-on-surface-variant mt-1">Next automated sync in 12:44:02</p>
+        <p class="font-label text-[10px] tracking-widest text-on-surface-variant uppercase">Savings Status</p>
+        <p class="font-headline text-2xl font-bold mt-2">{{ savings().length }} Active Goals</p>
+        <div class="h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
+          <div class="h-full bg-primary status-glow w-[65%] rounded-full"></div>
         </div>
-        <span class="material-symbols-outlined text-primary animate-pulse">sync</span>
       </div>
     </div>
   </div>
 
-  <!-- Bento Content Grid -->
+  <!-- Bento Grid Section -->
   <div class="grid grid-cols-12 gap-6">
-    <!-- Analytics: Cash Flow & Categories -->
-    <div class="col-span-12 md:col-span-8 flex flex-col gap-6">
-      <!-- Cash Flow Trend -->
-      <div class="bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex-1">
-        <div class="flex justify-between items-center mb-8">
-          <div>
-            <h3 class="font-headline text-lg font-bold">Cash Flow Dynamics</h3>
-            <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Income vs Expense Trend</p>
-          </div>
+    
+    <!-- Cash Flow Analytics -->
+    <div class="col-span-12 lg:col-span-8 bg-surface-container-low rounded-3xl border border-white/5 p-8">
+      <div class="flex justify-between items-center mb-10">
+        <div>
+          <h3 class="font-headline text-xl font-bold">Analytics Engine</h3>
+          <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Cash Flow Performance Matrix</p>
         </div>
-        <div class="h-64 w-full relative">
-          @if (!isLoading()) {
-            <div echarts [options]="cashFlowOptions()" class="h-full w-full"></div>
-          } @else {
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
-            </div>
-          }
+        <div class="flex gap-2">
+          <button class="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-on-surface hover:bg-white/10 transition-colors">6 Months</button>
         </div>
       </div>
-
-      <!-- Expense Categories -->
-      <div class="bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex-1">
-        <div class="flex justify-between items-center mb-8">
-          <div>
-            <h3 class="font-headline text-lg font-bold">Expense Distribution</h3>
-            <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Current Cycle Categories</p>
-          </div>
-        </div>
-        <div class="h-64 w-full relative">
-          @if (!isLoading()) {
-            <div echarts [options]="categoryOptions()" class="h-full w-full"></div>
-          } @else {
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-    <!-- Savings Priority -->
-    <div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8 flex flex-col">
-      <h3 class="font-headline text-lg font-bold mb-6">Savings Priority</h3>
-      <div class="space-y-8 flex-1">
+      
+      <div class="h-72 w-full relative">
         @if (isLoading()) {
-          <div class="flex justify-center p-8">
+          <div class="absolute inset-0 flex items-center justify-center">
             <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
-          </div>
-        } @else if (savings().length === 0) {
-          <div class="text-center p-8 text-on-surface-variant font-label text-xs uppercase tracking-widest opacity-60">
-            No active priorities
           </div>
         } @else {
-          @for (goal of savings().slice(0, 3); track goal.id) {
-            <div>
-              <div class="flex justify-between items-end mb-2">
-                <p class="font-label text-[10px] uppercase tracking-wider">{{ goal.name }}</p>
-                <p class="font-body text-xs text-primary font-medium">{{ goal.current_balance | currency:goal.currency }} / {{ goal.target_amount | currency:goal.currency }}</p>
-              </div>
-              <div class="h-1.5 rounded-full bg-surface-container-highest w-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-1000" [style.width.%]="goal.progress_pct" [style.backgroundColor]="goal.color || '#47EAED'"></div>
-              </div>
-            </div>
-          }
+          <div echarts [options]="cashFlowOptions()" class="h-full w-full"></div>
         }
       </div>
-      <button class="w-full mt-10 py-3 rounded-lg border border-outline-variant/50 font-label text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container hover:text-primary transition-all">
-        Configure Goals
-      </button>
     </div>
-    <!-- Recent Collective Activity -->
-    <div class="col-span-12 bg-surface-container-low rounded-xl border border-[#3B4949]/30 p-8">
-      <div class="flex justify-between items-center mb-8">
-        <h3 class="font-headline text-lg font-bold">Recent Ledger Activity</h3>
-        <button class="text-primary font-label text-[10px] font-bold tracking-widest uppercase hover:underline underline-offset-4 decoration-primary/50">Download Complete Ledger</button>
-      </div>
-      <div class="space-y-4">
+
+    <!-- Category Distribution -->
+    <div class="col-span-12 lg:col-span-4 bg-surface-container-low rounded-3xl border border-white/5 p-8 flex flex-col">
+      <h3 class="font-headline text-xl font-bold mb-1">Expense DNA</h3>
+      <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mb-8">Category Allocation</p>
+      
+      <div class="h-64 w-full relative flex-1">
         @if (isLoading()) {
-          <div class="flex justify-center p-8">
+          <div class="absolute inset-0 flex items-center justify-center">
             <span class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary block"></span>
           </div>
+        } @else {
+          <div echarts [options]="categoryOptions()" class="h-full w-full"></div>
+        }
+      </div>
+
+      <div class="mt-6 space-y-2">
+        <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3">Top Resources</p>
+        <!-- Mini list of top categories could go here -->
+      </div>
+    </div>
+
+    <!-- Recent Activity Ledger -->
+    <div class="col-span-12 bg-surface-container-low rounded-3xl border border-white/5 p-8">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h3 class="font-headline text-xl font-bold">Encrypted Ledger</h3>
+          <p class="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Recent Data Point History</p>
+        </div>
+        <a routerLink="/transactions" class="text-primary font-label text-[10px] font-bold tracking-[0.2em] uppercase hover:underline underline-offset-8 decoration-primary/30">
+          Access Full Node
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @if (isLoading()) {
+          <div class="col-span-2 flex justify-center p-12">
+            <span class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary block"></span>
+          </div>
         } @else if (transactions().length === 0) {
-          <div class="text-center p-8 text-on-surface-variant font-label text-xs uppercase tracking-widest opacity-60">
-            No recent transactions
+          <div class="col-span-2 text-center p-12 text-on-surface-variant/40 font-label text-xs uppercase tracking-widest">
+            Ledger Empty • No recent activity
           </div>
         } @else {
           @for (tx of transactions(); track tx.id) {
-            <div class="flex items-center justify-between group hover:bg-surface-container/50 p-4 rounded-xl border border-transparent hover:border-outline-variant/20 transition-all cursor-pointer">
-              <div class="flex items-center gap-6">
-                <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/20">
-                  <span class="material-symbols-outlined text-on-surface-variant text-[20px]">{{ tx.type === 'income' ? 'south_west' : 'north_east' }}</span>
+            <div class="flex items-center justify-between group bg-white/[0.02] hover:bg-white/[0.05] p-5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer">
+              <div class="flex items-center gap-5">
+                <div class="w-12 h-12 rounded-2xl bg-surface-container-highest flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-all">
+                  <span class="material-symbols-outlined text-on-surface-variant text-[24px]">
+                    {{ tx.categories?.icon || (tx.type === 'income' ? 'account_balance_wallet' : 'shopping_bag') }}
+                  </span>
                 </div>
                 <div>
-                  <p class="font-body text-sm font-semibold text-on-surface">{{ tx.description }}</p>
-                  <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{{ tx.payment_method }} • {{ tx.transaction_date | date:'dd MMM yyyy' }}</p>
+                  <p class="font-body text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{{ tx.description }}</p>
+                  <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+                    {{ tx.categories?.name || 'Uncategorized' }} • {{ tx.transaction_date | date:'dd MMM' }}
+                  </p>
                 </div>
               </div>
               <div class="text-right">
-                <p class="font-headline text-md font-bold" [ngClass]="{'text-primary': tx.type === 'income', 'text-error': tx.type === 'expense'}">{{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | currency:'USD' }}</p>
-                <p class="font-label text-[10px] uppercase mt-1 tracking-widest text-[#859493]">Settled</p>
+                <p class="font-headline text-base font-bold" [ngClass]="{'text-[#47EAED]': tx.type === 'income', 'text-[#FF5E5E]': tx.type === 'expense'}">
+                  {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | currency:'USD':'symbol':'1.0-2' }}
+                </p>
+                <div class="flex items-center justify-end gap-1.5 mt-1.5">
+                  <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_5px_rgba(71,234,237,0.5)]"></div>
+                  <p class="font-label text-[9px] uppercase tracking-widest text-[#859493]">Verified</p>
+                </div>
               </div>
             </div>
           }
         }
       </div>
     </div>
+
   </div>
 </div>

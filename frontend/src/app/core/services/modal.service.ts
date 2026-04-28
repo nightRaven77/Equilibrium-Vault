@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { Couple } from '../models/finance.model';
 
 @Injectable({
   providedIn: 'root',
@@ -6,20 +7,20 @@ import { Injectable, signal } from '@angular/core';
 export class ModalService {
   // Signal para controlar la visibilidad del modal global de transacciones
   private _isTransactionModalOpen = signal<boolean>(false);
+  private _selectedTransaction = signal<any | null>(null);
 
   // Exponemos el signal como readonly para que solo se pueda cambiar vía métodos
   public isTransactionModalOpen = this._isTransactionModalOpen.asReadonly();
+  public selectedTransaction = this._selectedTransaction.asReadonly();
 
-  openTransactionModal() {
+  openTransactionModal(transaction: any = null) {
+    this._selectedTransaction.set(transaction);
     this._isTransactionModalOpen.set(true);
   }
 
   closeTransactionModal() {
     this._isTransactionModalOpen.set(false);
-  }
-
-  toggleTransactionModal() {
-    this._isTransactionModalOpen.update((open) => !open);
+    this._selectedTransaction.set(null);
   }
 
   // --- Card Modal ---
@@ -139,5 +140,22 @@ export class ModalService {
   closeSavingTxModal() {
     this._isSavingTxModalOpen.set(false);
     this._selectedSavingGoalForTx.set(null);
+  }
+
+  // --- Couple Transaction Modal ---
+  private _isCoupleTxModalOpen = signal<boolean>(false);
+  private _selectedCouple = signal<Couple | null>(null);
+
+  public isCoupleTxModalOpen = this._isCoupleTxModalOpen.asReadonly();
+  public selectedCouple = this._selectedCouple.asReadonly();
+
+  openCoupleTxModal(couple: Couple) {
+    this._selectedCouple.set(couple);
+    this._isCoupleTxModalOpen.set(true);
+  }
+
+  closeCoupleTxModal() {
+    this._isCoupleTxModalOpen.set(false);
+    this._selectedCouple.set(null);
   }
 }

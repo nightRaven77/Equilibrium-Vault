@@ -8,11 +8,12 @@ import { TransactionModalComponent } from '../transaction-modal/transaction-moda
 import { CardModalComponent } from '../card-modal/card-modal.component';
 import { SavingGoalModalComponent } from '../saving-goal-modal/saving-goal-modal.component';
 import { SavingTxModalComponent } from '../saving-tx-modal/saving-tx-modal.component';
+import { CoupleTxModalComponent } from '../couple-tx-modal/couple-tx-modal.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TransactionModalComponent, CardModalComponent, SavingGoalModalComponent, SavingTxModalComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TransactionModalComponent, CardModalComponent, SavingGoalModalComponent, SavingTxModalComponent, CoupleTxModalComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './layout.component.html',
 })
