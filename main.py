@@ -32,6 +32,6 @@ app.include_router(savings.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 
-@app.get("/api/health", tags=["system"])
+@app.get("/health", tags=["system"])
 def health_check():
     return {"status": "ok", "version": settings.VERSION}

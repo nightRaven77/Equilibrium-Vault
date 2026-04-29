@@ -32,6 +32,7 @@ Aplicación de control de finanzas personales y en pareja. Backend en FastAPI + 
 | 3 | Tarjetas | Control de crédito, cortes y pagos |
 | 4 | Recurrentes | Suscripciones y pagos agendados |
 | 5 | Ahorros | Metas con rendimientos capitalizados |
+| 6 | Perfil | Gestión de identidad, credenciales, avatar y sesión PWA |
 
 ---
 
@@ -328,12 +329,15 @@ Hasta la fecha, se ha completado la construcción de la estructura base y los pr
 10. ✅ **Sincronización Real-time**: Bus de eventos basado en Angular Signals (`RefreshService`) para coordinar la actualización de datos entre módulos tras cualquier movimiento.
 
 11. ✅ **Frontend Base (Angular)** — Inicialización completada, estructura modular, Tailwind v4 configurado y sistema de diseño "Equilibrium Obsidian" establecido.
+12. ✅ **Módulo Recurrentes (Suscripciones)** — Visualización y gestión de pagos recurrentes en el frontend.
+13. ✅ **Calendario de Pagos** — Nueva vista para visualizar el impacto futuro de los MSI y pagos recurrentes en una línea de tiempo.
+14. ✅ **PWA y Sesiones** — Implementación de *Refresh Tokens* (interceptores y backend) para sesiones persistentes e instalación offline.
+15. ✅ **Dashboard Analytics** — Gráficas avanzadas interactivas (ECharts) de flujo de caja y tendencias de gasto.
+16. ✅ **Módulo Perfil** — Backend/Frontend para edición de nombre, contraseña y carga de imagen (Supabase Storage bucket `avatars`).
 
 **Por Desarrollar / Siguientes Tareas (⏳):**
-12. ✅ **Módulo Recurrentes (Suscripciones)** — Implementar la visualización y gestión de pagos recurrentes en el frontend.
-13. ✅ **Calendario de Pagos** — Nueva vista para visualizar el impacto futuro de los MSI y pagos recurrentes en una línea de tiempo.
-14. ✅ **PWA (Configuración Final)** — Refinar el service worker y la instalación offline para dispositivos móviles.
-15. ✅ **Dashboard Analytics** — Gráficas avanzadas de flujo de caja y tendencias de gasto.
+- *Todos los módulos core y de frontend han sido implementados exitosamente.*
+- *Futuras optimizaciones y pruebas end-to-end.*
 
 ---
 
@@ -346,29 +350,42 @@ Hasta la fecha, se ha completado la construcción de la estructura base y los pr
 - **@angular/pwa** para service worker y manifest
 - **Angular Signals** como mecanismo de estado reactivo (sin NgRx)
 
-### Estructura de carpetas planeada
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── auth/           # Guard, interceptor JWT, servicio de sesión
-│   │   ├── services/       # ApiService base (HttpClient wrapper)
-│   │   └── models/         # Interfaces TypeScript espejo de los schemas FastAPI
-│   ├── shared/
-│   │   ├── components/     # Componentes reutilizables (cards, badges, empty-state)
-│   │   ├── pipes/          # CurrencyMx, RelativeDate, etc.
-│   │   └── directives/
-│   ├── features/
-│   │   ├── auth/           # Login, registro
-│   │   ├── dashboard/      # Vista principal con resumen
-│   │   ├── personal/       # Transacciones personales
-│   │   ├── cards/          # Tarjetas de crédito y cortes
-│   │   ├── recurring/      # Pagos recurrentes
-│   │   ├── couples/        # Gastos en pareja
-│   │   └── savings/        # Metas de ahorro
-│   └── app.routes.ts       # Lazy loading por feature
-├── assets/
-└── manifest.webmanifest
+### Estructura de Carpetas Completa (Full-Stack)
+```text
+Finanzas/
+├── app/                        # Backend (FastAPI)
+│   ├── api/
+│   │   ├── dependencies/       # Inyección de dependencias (Auth)
+│   │   └── routers/            # Endpoints: auth, cards, categories, couples, personal, profile, recurring, savings
+│   ├── core/                   # Configuración global (settings) y constantes
+│   ├── db/                     # Cliente de conexión a Supabase
+│   ├── schemas/                # Modelos Pydantic para validación de datos (Input/Output)
+│   ├── services/               # Lógica de negocio (ej. personal_service.py)
+│   └── main.py                 # Punto de entrada de FastAPI
+├── frontend/                   # Frontend (Angular 19+ PWA)
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/           # Servicios Singleton, Interceptores JWT y AuthGuard
+│   │   │   │   └── components/ # Layout principal (TopAppBar, Menús)
+│   │   │   ├── shared/         # Componentes UI reutilizables (Modales, Badges, Botones)
+│   │   │   ├── features/       # Módulos de la aplicación (Lazy loaded)
+│   │   │   │   ├── auth/       # Login y Registro
+│   │   │   │   ├── dashboard/  # Resumen y analíticas (ECharts)
+│   │   │   │   ├── personal/   # Transacciones y Gastos
+│   │   │   │   ├── cards/      # Tarjetas de crédito y Estados de cuenta
+│   │   │   │   ├── recurring/  # Suscripciones y pagos fijos
+│   │   │   │   ├── couples/    # Finanzas compartidas
+│   │   │   │   ├── savings/    # Metas de ahorro
+│   │   │   │   └── profile/    # Gestión de cuenta, avatar y seguridad
+│   │   │   ├── app.routes.ts   # Enrutador principal
+│   │   │   └── app.config.ts   # Proveedores globales (HttpClient, ProvideEcharts, PWA)
+│   │   ├── assets/             # Imágenes estáticas e íconos
+│   │   └── styles.css          # Tailwind CSS v4 e importaciones de tipografía
+│   ├── angular.json            # Configuración de compilación Angular
+│   └── tailwind.config.js      # (Si aplica) Configuración de temas
+├── .env                        # Variables de entorno (Supabase URL, Anon Key)
+├── pyproject.toml              # Dependencias de Python (uv)
+└── package.json                # Dependencias de Node/Angular
 ```
 
 ### Convenciones Angular

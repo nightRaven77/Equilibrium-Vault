@@ -1,0 +1,52 @@
+# ============================================================
+# Dockerfile — Backend (FastAPI + uv)
+# Contexto de build: raíz del repo (Finanzas/)
+# ============================================================
+
+# --- Etapa 1: dependencias ---
+FROM python:3.13-slim AS builder
+
+# uv es el gestor de paquetes del proyecto
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Copiar solo los archivos de dependencias primero (cache layer)
+COPY pyproject.toml .
+COPY uv.lock* .
+
+# Instalar gcc y python3-dev para compilar extensiones C (ej. pyiceberg)
+RUN apt-get update && apt-get install -y --no-install-recommends gcc python3-dev
+
+# Instalar dependencias en un venv aislado dentro de la imagen
+RUN uv sync --frozen --no-dev
+
+# --- Etapa 2: imagen final (slim) ---
+FROM python:3.13-slim AS runner
+
+# Crear usuario no-root por seguridad
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+WORKDIR /app
+
+# Copiar venv desde el builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Copiar el código del backend
+# El backend vive en app/ dentro del repo, pero el punto de entrada es main.py en la raíz
+COPY app/ ./app/
+COPY main.py ./
+
+# Asegurar que el venv esté en el PATH
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Cambiar al usuario no-root
+USER appuser
+
+EXPOSE 8000
+
+# Uvicorn con workers configurados por variable de entorno
+# WEB_CONCURRENCY default=2 para contenedor pequeño
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2}"]

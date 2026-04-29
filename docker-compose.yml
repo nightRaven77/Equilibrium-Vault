@@ -1,0 +1,71 @@
+# ============================================================
+# docker-compose.yml — Finance Tracker
+# Raíz del repo: Finanzas/
+#
+# Servicios:
+#   nginx    → :80  (reverse proxy público)
+#   backend  → :8000 (FastAPI, solo interno)
+#   frontend → :80  (Angular estático, solo interno)
+#
+# Uso:
+#   Desarrollo:  docker compose up --build
+#   Producción:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ============================================================
+
+services:
+
+  # ── Reverse Proxy ────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: finanzas_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - finanzas_net
+
+  # ── Backend (FastAPI) ────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: finanzas_backend
+    # NO exponer puerto al host en producción — solo nginx lo alcanza
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    environment:
+      WEB_CONCURRENCY: "2"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - finanzas_net
+
+  # ── Frontend (Angular PWA) ───────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: finanzas_frontend
+    expose:
+      - "80"
+    restart: unless-stopped
+    networks:
+      - finanzas_net
+
+networks:
+  finanzas_net:
+    driver: bridge
