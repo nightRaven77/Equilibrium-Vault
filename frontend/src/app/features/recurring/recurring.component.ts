@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RecurringService } from '../../core/services/recurring.service';
 import { RefreshService } from '../../core/services/refresh.service';
 import { ModalService } from '../../core/services/modal.service';
@@ -13,7 +13,8 @@ import { RecurringHistoryModalComponent } from './recurring-history-modal/recurr
   selector: 'app-recurring',
   standalone: true,
   imports: [
-    CommonModule, CurrencyPipe, DatePipe,
+    CommonModule,
+    CurrencyPipe,
     RecurringPlanModalComponent,
     OccurrencePayModalComponent,
     RecurringHistoryModalComponent,
@@ -33,34 +34,54 @@ export class RecurringComponent implements OnInit {
   /** Suma mensual normalizada de todos los planes activos */
   public monthlyTotal = computed(() => {
     const multiplier: Record<string, number> = {
-      daily: 30, weekly: 4.33, biweekly: 2.17,
-      monthly: 1, quarterly: 1 / 3, yearly: 1 / 12,
+      daily: 30,
+      weekly: 4.33,
+      biweekly: 2.17,
+      monthly: 1,
+      quarterly: 1 / 3,
+      yearly: 1 / 12,
     };
     return this.activePlans().reduce((sum, p) => {
-      return sum + (p.amount * (multiplier[p.frequency] ?? 1));
+      return sum + p.amount * (multiplier[p.frequency] ?? 1);
     }, 0);
   });
 
   /** Monto total de pagos urgentes (próximos 7 días) */
   public urgentTotal = computed(() =>
     this.upcomingPayments()
-      .filter(p => this.daysUntil(p.scheduled_date) <= 7 && p.status === 'pending')
-      .reduce((sum, p) => sum + p.amount, 0)
+      .filter((p) => this.daysUntil(p.scheduled_date) <= 7 && p.status === 'pending')
+      .reduce((sum, p) => sum + p.amount, 0),
   );
 
   /** Contadores para KPIs */
-  public pendingCount = computed(() =>
-    this.upcomingPayments().filter(p => p.status === 'pending').length
+  public pendingCount = computed(
+    () => this.upcomingPayments().filter((p) => p.status === 'pending').length,
   );
 
   private readonly brandLogos: Record<string, string> = {
-    netflix: 'netflix', spotify: 'spotify', apple: 'apple', amazon: 'amazon',
-    youtube: 'youtube', disney: 'disney', hbo: 'hbo', max: 'max',
-    xbox: 'xbox', playstation: 'playstation', nintendo: 'nintendo',
-    crunchyroll: 'crunchyroll', claude: 'anthropic', copilot: 'githubcopilot',
-    google: 'googlegemini', openai: 'openai', chatgpt: 'openai',
-    github: 'github', notion: 'notion', figma: 'figma', slack: 'slack',
-    dropbox: 'dropbox', onedrive: 'microsoftonedrive',
+    netflix: 'netflix',
+    spotify: 'spotify',
+    apple: 'apple',
+    amazon: 'amazon',
+    youtube: 'youtube',
+    disney: 'disney',
+    hbo: 'hbo',
+    max: 'max',
+    xbox: 'xbox',
+    playstation: 'playstation',
+    nintendo: 'nintendo',
+    crunchyroll: 'crunchyroll',
+    claude: 'anthropic',
+    copilot: 'githubcopilot',
+    google: 'googlegemini',
+    openai: 'openai',
+    chatgpt: 'openai',
+    github: 'github',
+    notion: 'notion',
+    figma: 'figma',
+    slack: 'slack',
+    dropbox: 'dropbox',
+    onedrive: 'microsoftonedrive',
   };
 
   constructor() {
@@ -69,65 +90,87 @@ export class RecurringComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void {
+    this.loadData();
+  }
 
   loadData(): void {
     this.isLoading.set(true);
     let done = 0;
-    const check = () => { if (++done === 2) this.isLoading.set(false); };
+    const check = () => {
+      if (++done === 2) this.isLoading.set(false);
+    };
 
     this.recurringService.getRecurringPayments().subscribe({
-      next: (plans) => { this.activePlans.set(plans); check(); },
+      next: (plans) => {
+        this.activePlans.set(plans);
+        check();
+      },
       error: () => check(),
     });
 
     this.recurringService.getUpcomingPayments().subscribe({
-      next: (up) => { this.upcomingPayments.set(up); check(); },
+      next: (up) => {
+        this.upcomingPayments.set(up);
+        check();
+      },
       error: () => check(),
     });
   }
 
-  openAddPlanModal(): void { this.modalService.openRecurringPlanModal(); }
-  editPlan(id: string): void { this.modalService.openRecurringPlanModal(id); }
-  openHistoryModal(id: string): void { this.modalService.openRecurringHistoryModal(id); }
-  payOccurrence(payment: UpcomingPayment): void { this.modalService.openOccurrencePayModal(payment); }
+  openAddPlanModal(): void {
+    this.modalService.openRecurringPlanModal();
+  }
+  editPlan(id: string): void {
+    this.modalService.openRecurringPlanModal(id);
+  }
+  openHistoryModal(id: string): void {
+    this.modalService.openRecurringHistoryModal(id);
+  }
+  payOccurrence(payment: UpcomingPayment): void {
+    this.modalService.openOccurrencePayModal(payment);
+  }
 
   skipOccurrence(payment: UpcomingPayment): void {
-    this.alertService.confirm(
-      '¿Omitir este pago?',
-      `Se marcará "${payment.plan_name}" como omitido para esta fecha. No se creará ninguna transacción.`,
-    ).then(confirmed => {
-      if (!confirmed) return;
-      this.recurringService.skipOccurrence(payment.occurrence_id).subscribe({
-        next: () => {
-          this.alertService.success('Omitido', 'El pago fue marcado como omitido.');
-          this.refreshService.triggerRefresh();
-        },
-        error: (err) => {
-          const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al omitir.';
-          this.alertService.error('Error', msg);
-        },
+    this.alertService
+      .confirm(
+        '¿Omitir este pago?',
+        `Se marcará "${payment.plan_name}" como omitido para esta fecha. No se creará ninguna transacción.`,
+      )
+      .then((confirmed) => {
+        if (!confirmed) return;
+        this.recurringService.skipOccurrence(payment.occurrence_id).subscribe({
+          next: () => {
+            this.alertService.success('Omitido', 'El pago fue marcado como omitido.');
+            this.refreshService.triggerRefresh();
+          },
+          error: (err) => {
+            const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al omitir.';
+            this.alertService.error('Error', msg);
+          },
+        });
       });
-    });
   }
 
   deletePlan(plan: RecurringPayment): void {
-    this.alertService.confirm(
-      `¿Eliminar "${plan.name}"?`,
-      'La suscripción se desactivará. El historial de pagos se conservará.',
-    ).then(confirmed => {
-      if (!confirmed) return;
-      this.recurringService.deleteRecurringPayment(plan.id).subscribe({
-        next: () => {
-          this.alertService.success('Eliminada', `"${plan.name}" fue eliminada.`);
-          this.refreshService.triggerRefresh();
-        },
-        error: (err) => {
-          const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al eliminar.';
-          this.alertService.error('Error', msg);
-        },
+    this.alertService
+      .confirm(
+        `¿Eliminar "${plan.name}"?`,
+        'La suscripción se desactivará. El historial de pagos se conservará.',
+      )
+      .then((confirmed) => {
+        if (!confirmed) return;
+        this.recurringService.deleteRecurringPayment(plan.id).subscribe({
+          next: () => {
+            this.alertService.success('Eliminada', `"${plan.name}" fue eliminada.`);
+            this.refreshService.triggerRefresh();
+          },
+          error: (err) => {
+            const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al eliminar.';
+            this.alertService.error('Error', msg);
+          },
+        });
       });
-    });
   }
 
   getBrandLogo(name: string): string | null {
@@ -163,8 +206,12 @@ export class RecurringComponent implements OnInit {
 
   frequencyLabel(f: string): string {
     const map: Record<string, string> = {
-      daily: 'Diario', weekly: 'Semanal', biweekly: 'Quincenal',
-      monthly: 'Mensual', quarterly: 'Trimestral', yearly: 'Anual',
+      daily: 'Diario',
+      weekly: 'Semanal',
+      biweekly: 'Quincenal',
+      monthly: 'Mensual',
+      quarterly: 'Trimestral',
+      yearly: 'Anual',
     };
     return map[f] ?? f;
   }

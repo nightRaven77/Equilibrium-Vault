@@ -110,7 +110,7 @@
                 </td>
                 <td class="px-6 py-5 text-right">
                   <p class="font-headline text-base font-bold" [ngClass]="{'text-[#47EAED]': tx.type === 'income', 'text-[#FF5E5E]': tx.type === 'expense'}">
-                    {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | currency:'USD' }}
+                    {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | currency:'MXN' }}
                   </p>
                 </td>
                 <td class="px-6 py-5">

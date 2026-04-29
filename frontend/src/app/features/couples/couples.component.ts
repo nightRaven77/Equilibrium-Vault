@@ -32,6 +32,12 @@ export class CouplesComponent implements OnInit {
     name: ['', Validators.maxLength(80)],
   });
 
+  public isEditModalOpen = signal(false);
+  public isEditing = signal(false);
+  public editCoupleForm = this.fb.group({
+    name: ['', Validators.maxLength(80)],
+  });
+
   public couple = signal<Couple | null>(null);
   public transactions = signal<CoupleTransaction[]>([]);
   public balance = signal<CoupleBalance | null>(null);
@@ -219,6 +225,64 @@ export class CouplesComponent implements OnInit {
         this.isCreating.set(false);
         const msg = err.error?.detail?.message ?? err.error?.detail ?? 'Error al crear el vínculo.';
         this.alertService.error('No se pudo crear', msg);
+      }
+    });
+  }
+
+  openEditModal() {
+    const c = this.couple();
+    if (!c) return;
+    this.editCoupleForm.patchValue({ name: c.name || '' });
+    this.isEditModalOpen.set(true);
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen.set(false);
+    this.editCoupleForm.reset();
+  }
+
+  submitEditCouple() {
+    const c = this.couple();
+    if (!c) return;
+    this.isEditing.set(true);
+    const v = this.editCoupleForm.value;
+    
+    this.financeService.updateCouple(c.id, { name: v.name?.trim() || null }).subscribe({
+      next: () => {
+        this.alertService.success('Vínculo actualizado', 'El nombre del vínculo ha sido actualizado.');
+        this.isEditing.set(false);
+        this.closeEditModal();
+        this.fetchCoupleData();
+      },
+      error: (err) => {
+        this.isEditing.set(false);
+        const msg = err.error?.detail?.message ?? 'Error al actualizar el vínculo.';
+        this.alertService.error('No se pudo actualizar', msg);
+      }
+    });
+  }
+
+  deleteCouple() {
+    const c = this.couple();
+    if (!c) return;
+
+    this.alertService.confirm(
+      '¿Eliminar vínculo?',
+      `¿Estás seguro de que deseas eliminar este vínculo con ${c.user2_name}? El historial de transacciones se conservará, pero el vínculo se marcará como inactivo.`,
+      'Sí, eliminar'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.financeService.updateCouple(c.id, { status: 'inactive' }).subscribe({
+          next: () => {
+            this.alertService.success('Vínculo eliminado', 'El vínculo ha sido marcado como inactivo.');
+            this.couple.set(null); // Reset UI to "Sin vínculo activo"
+            this.fetchCoupleData();
+          },
+          error: (err) => {
+            const msg = err.error?.detail?.message ?? 'Error al eliminar el vínculo.';
+            this.alertService.error('Error', msg);
+          }
+        });
       }
     });
   }

@@ -117,13 +117,13 @@
         <span class="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-full border-2 border-[#1C1B1B]"></span>
       </button>
       
-      <div class="flex items-center gap-2 md:gap-3">
+      <a routerLink="/profile" class="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-white/5 rounded-xl p-1 pr-2 transition-colors">
         <div class="text-right hidden xs:block">
-          <p class="font-label text-[9px] md:text-[10px] font-bold text-[#E5E2E1] leading-none">ALEX_VAULT_01</p>
+          <p class="font-label text-[9px] md:text-[10px] font-bold text-[#E5E2E1] leading-none">{{ currentUser()?.full_name || 'ALEX_VAULT_01' | uppercase }}</p>
           <p class="font-label text-[7px] md:text-[8px] text-primary tracking-tighter uppercase">PREMIUM ACCESS</p>
         </div>
-        <img alt="User avatar" class="w-8 h-8 rounded-lg object-cover border border-[#3B4949]/30 grayscale hover:grayscale-0 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5ClpFPb6f9m_13wOcYxmWf1dFy94uLUby09pOYOWx03V9YOc90tvw5mtVRhbL0RWoOSAxhItQuh-rpFNR_Kn0Am2gIn8mK00_ADLoloL8AB20aZK1zQBn6MVa2BG0MGG7bRSV2KoRY6OWGYZKVBwjzzUr27lOpoulddIUJFl3OhM5K5-iPWgbP3U4_czTmiO3fBJ1ipy43G_sOfq_mCn9it55i5hPSEyV_8KMMUgj6DeZGRw_e-Gxh-awH5A604lg6bM0pIvOhxC3"/>
-      </div>
+        <img alt="User avatar" class="w-8 h-8 rounded-lg object-cover border border-[#3B4949]/30 grayscale hover:grayscale-0 transition-all" [src]="currentUser()?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuD5ClpFPb6f9m_13wOcYxmWf1dFy94uLUby09pOYOWx03V9YOc90tvw5mtVRhbL0RWoOSAxhItQuh-rpFNR_Kn0Am2gIn8mK00_ADLoloL8AB20aZK1zQBn6MVa2BG0MGG7bRSV2KoRY6OWGYZKVBwjzzUr27lOpoulddIUJFl3OhM5K5-iPWgbP3U4_czTmiO3fBJ1ipy43G_sOfq_mCn9it55i5hPSEyV_8KMMUgj6DeZGRw_e-Gxh-awH5A604lg6bM0pIvOhxC3'"/>
+      </a>
     </div>
   </header>
 

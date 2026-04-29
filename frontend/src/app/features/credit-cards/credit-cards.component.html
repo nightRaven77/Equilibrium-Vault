@@ -7,7 +7,7 @@
     <div class="px-5 py-3 bg-surface-container-low border border-outline-variant/10 rounded-xl relative overflow-hidden group">
         <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       <p class="text-[10px] font-label text-primary uppercase tracking-widest relative z-10">Total Credit Limit</p>
-      <p class="text-2xl font-headline font-bold relative z-10">{{ totalCreditLimit() | currency:'USD' }}</p>
+      <p class="text-2xl font-headline font-bold relative z-10">{{ totalCreditLimit() | currency:'MXN' }}</p>
     </div>
     
     <button (click)="openAddCardModal()" 
@@ -135,7 +135,7 @@
         
         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span class="text-3xl font-headline font-bold tracking-tighter text-on-surface">
-            {{ totalBalance() | currency:'USD':'symbol':'1.0-0' }}
+            {{ totalBalance() | currency:'MXN':'symbol':'1.0-0' }}
           </span>
           <span class="text-[10px] font-label text-primary font-bold uppercase tracking-widest">Used</span>
         </div>

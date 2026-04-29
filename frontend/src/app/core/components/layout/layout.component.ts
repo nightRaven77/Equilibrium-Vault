@@ -39,6 +39,10 @@ export class LayoutComponent {
     return this.modalService.isTransactionModalOpen();
   }
 
+  get currentUser() {
+    return this.authService.currentUser;
+  }
+
   toggleSidebar() {
     this.isSidebarOpen.update(open => !open);
   }

@@ -11,6 +11,7 @@ import { RecurringComponent } from './features/recurring/recurring.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { TransactionsComponent } from './features/transactions/transactions.component';
 import { LayoutComponent } from './core/components/layout/layout.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 export const routes: Routes = [
   // 1. Redirección inicial limpia
@@ -33,6 +34,7 @@ export const routes: Routes = [
       { path: 'recurring', component: RecurringComponent },
       { path: 'calendar', component: CalendarComponent },
       { path: 'transactions', component: TransactionsComponent },
+      { path: 'profile', component: ProfileComponent },
       
       // Si el usuario está logueado pero la ruta no existe, la ve DENTRO del layout
       { path: '**', component: NotFoundComponent },

@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
@@ -26,13 +26,33 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Dejamos que la petición siga su camino, pero interceptamos posibles errores
   return next(clonedRequest).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si el servidor responde que no estamos autorizados (token expirado/inválido)
-      if (error.status === 401) {
-        console.warn('Token expirado o inválido. Cerrando sesión automáticamente...');
+      // Evitar bucle infinito si el error 401 viene del endpoint de refresh o login
+      if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
+        console.warn('Token expirado. Intentando refrescar sesión...');
+        
+        return authService.refreshToken().pipe(
+          switchMap((res) => {
+            // Reintentar la petición original con el nuevo token
+            const retryReq = req.clone({
+              setHeaders: { Authorization: `Bearer ${res.access_token}` }
+            });
+            return next(retryReq);
+          }),
+          catchError((refreshErr) => {
+            console.error('Refresh token expirado o inválido. Cerrando sesión automáticamente...');
+            authService.logout();
+            router.navigate(['/auth/login']);
+            return throwError(() => refreshErr);
+          })
+        );
+      }
+      
+      // Si el servidor responde 401 en login o refresh, o si es otro error
+      if (error.status === 401 && req.url.includes('/auth/refresh')) {
         authService.logout();
         router.navigate(['/auth/login']);
       }
-      // Repropagamos el error por si algún componente necesita manejarlo
+      
       return throwError(() => error);
     })
   );

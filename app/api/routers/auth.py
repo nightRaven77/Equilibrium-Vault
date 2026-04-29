@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from supabase import Client
 from app.db.supabase import get_supabase_client
-from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, RefreshRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -42,7 +42,8 @@ def register(request: RegisterRequest):
                 user_id=str(user.id),
                 email=user.email or request.email,
                 full_name=request.full_name,
-                avatar_url=None
+                avatar_url=None,
+                refresh_token=None
             )
 
         return LoginResponse(
@@ -51,7 +52,8 @@ def register(request: RegisterRequest):
             user_id=str(user.id),
             email=user.email or request.email,
             full_name=request.full_name,
-            avatar_url=None
+            avatar_url=None,
+            refresh_token=session.refresh_token
         )
 
     except HTTPException:
@@ -109,7 +111,8 @@ def login(request: LoginRequest):
             user_id=str(user.id),
             email=user.email or request.email,
             full_name=full_name,
-            avatar_url=avatar_url
+            avatar_url=avatar_url,
+            refresh_token=session.refresh_token
         )
     except HTTPException:
         raise
@@ -117,4 +120,50 @@ def login(request: LoginRequest):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error de autenticación: {str(e)}",
+        )
+
+@router.post("/refresh", response_model=LoginResponse)
+def refresh_session(request: RefreshRequest):
+    """
+    Refresca la sesión utilizando el refresh token.
+    Retorna un nuevo access_token y refresh_token.
+    """
+    supabase: Client = get_supabase_client()
+    try:
+        response = supabase.auth.refresh_session(request.refresh_token)
+        session = response.session
+        user = response.user
+
+        if not session or not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token inválido o expirado"
+            )
+
+        # Enriquecer con datos del perfil
+        full_name = None
+        avatar_url = None
+        try:
+            profile_resp = supabase.table("profiles").select(
+                "full_name, avatar_url"
+            ).eq("id", str(user.id)).execute()
+            if profile_resp.data:
+                full_name = profile_resp.data[0].get("full_name")
+                avatar_url = profile_resp.data[0].get("avatar_url")
+        except Exception:
+            pass
+
+        return LoginResponse(
+            access_token=session.access_token,
+            token_type="Bearer",
+            user_id=str(user.id),
+            email=user.email or "",
+            full_name=full_name,
+            avatar_url=avatar_url,
+            refresh_token=session.refresh_token
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"No se pudo refrescar la sesión: {str(e)}"
         )
