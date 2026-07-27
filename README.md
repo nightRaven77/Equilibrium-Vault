@@ -1,97 +1,153 @@
-# Equilibrium Vault (v1.0)
+# 💳 Equilibrium Vault — Finance Tracker PWA
 
-**Equilibrium Vault** es una plataforma integral de gestión financiera personal y de parejas, diseñada con una estética premium _dark obsidian_ e interfaces de alto rendimiento.
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Angular](https://img.shields.io/badge/Frontend-Angular%2019-DD0031.svg?style=flat&logo=angular)](https://angular.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Offline--Ready-00f2fe.svg?style=flat)](https://developer.mozilla.org/es/docs/Web/Progressive_web_apps)
+[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E.svg?style=flat&logo=supabase)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Este repositorio contiene la versión `v1.0` completa, que incluye un backend seguro y escalable, y una Progressive Web App (PWA) reactiva.
+**Equilibrium Vault** es una plataforma integral de gestión financiera personal y de parejas, diseñada con una estética premium *Dark Obsidian* (glassmorphism), respuesta ultra-rápida y arquitectura Progressive Web App (PWA).
 
----
-
-## 🚀 Características Principales
-
-- **Dashboard Analytics Interactivo:** Gráficas de flujo de caja y tendencias de gasto renderizadas en tiempo real con **Apache ECharts** y efectos _glassmorphism_.
-- **Gestión de Tarjetas de Crédito y MSI:** Sistema avanzado de fechas de corte y cálculo automático de Meses Sin Intereses con transacciones "hijas".
-- **Calendario Predictivo:** Línea de tiempo visual para anticipar cobros de suscripciones y cuotas de MSI pendientes.
-- **Ahorros y Finanzas Compartidas:** Gestión de deudas cruzadas entre parejas y simulador visual de metas de ahorro.
-- **Seguridad de Nivel Bancario:** Autenticación JWT y políticas nativas de Row Level Security (RLS) en la base de datos PostgreSQL.
-- **PWA Instalable:** Acceso como app nativa offline con caché estricto y seguro (solo UI, sin comprometer datos financieros).
+Permite un control exhaustivo de ingresos, gastos, tarjetas de crédito con corte y MSI, suscripciones recurrentes, metas de ahorro y saldos compartidos en pareja.
 
 ---
 
-## 🏗 Stack Tecnológico
+## ✨ Características Principales
 
-### Backend (`/`)
-
-- **Framework:** FastAPI (Python 3.13+)
-- **Base de Datos & Auth:** Supabase (PostgreSQL + JWT + Triggers/Views)
-- **Manejo de Paquetes:** `uv`
-- **Validaciones:** Pydantic v2
-
-### Frontend (`/frontend`)
-
-- **Framework:** Angular 17+ (Standalone Components, Signals, Control Flow)
-- **Estilos:** TailwindCSS v4
-- **Visualización de Datos:** Apache ECharts (`ngx-echarts`)
-- **PWA:** `@angular/service-worker`
+- **📊 Dashboard Analytics Interactivo:** Gráficas de flujo de caja y tendencias de gasto en tiempo real renderizadas con **Apache ECharts**.
+- **💳 Tarjetas de Crédito & MSI:** Gestión automática de fechas de corte, días de pago y compras a Meses Sin Intereses con desglose de cuotas mensuales.
+- **📅 Calendario Predictivo:** Línea de tiempo visual para anticipar cobros de suscripciones y cuotas de MSI pendientes.
+- **👩‍❤️‍👨 Finanzas Compartidas (Pareja):** División porcentual de gastos comunes con cálculo de saldos y liquidación simplificada.
+- **🔒 Seguridad & Row Level Security (RLS):** Autenticación JWT administrada por **Supabase Auth** y aislamiento estricto de datos en PostgreSQL mediante políticas RLS.
+- **📱 PWA Instalable:** Instalación nativa en iOS, Android y Desktop con almacenamiento en caché seguro.
 
 ---
 
-## 📦 Estructura del Proyecto
+## 📁 Estructura del Proyecto
 
 ```text
+Finanzas/
 ├── app/                   # 🐍 BACKEND (FastAPI)
-│   ├── api/routers/       # Endpoints (Personal, Cards, Recurring, Couples, Savings)
-│   ├── core/              # Autenticación y configuración global
-│   ├── db/                # Cliente de Supabase
-│   └── schemas/           # Modelos Pydantic de entrada/salida
-├── frontend/              # 🅰️ FRONTEND (Angular)
-│   ├── public/icons/      # Assets de la PWA (NanoBanana icon)
-│   ├── src/app/core/      # Servicios (HTTP), Interceptors (JWT), Modelos
-│   └── src/app/features/  # Componentes UI (Dashboard, Calendar, Layout, Auth)
-├── main.py                # Entrypoint de FastAPI
-└── PROJECT_CONTEXT.md     # Bitácora detallada de arquitectura y base de datos
+│   ├── api/routers/       # Endpoints (Personal, Tarjetas, Recurrentes, Parejas, Ahorros, Categorías, Perfil)
+│   ├── core/              # Configuración global y gestión de CORS dinámico
+│   ├── db/                # Cliente y conexión asíncrona a Supabase
+│   └── schemas/           # Modelos Pydantic v2 de validación
+├── docker/                # 🐳 Dockerfiles y configuraciones Nginx
+├── frontend/              # 🅰️ FRONTEND (Angular 19 PWA)
+│   ├── scripts/
+│   │   └── set-env.js     # Script automátizador que inyecta .env en environment.prod.ts
+│   ├── src/app/core/      # Servicios HTTP, Interceptores JWT y Modelos
+│   ├── src/app/features/  # Módulos UI (Dashboard, Calendar, Cards, Couples, Savings, Auth)
+│   ├── .env.example       # Plantilla de variables para el frontend
+│   └── package.json       # Scripts de build con compilación de entorno .env
+├── main.py                # Entrypoint de FastAPI + Middleware CORS
+├── docker-compose.yml     # Orquestación local en Docker
+├── docker-compose.prod.yml# Orquestación de producción con SSL/Certbot
+├── .env.example           # Plantilla de variables para el backend
+└── README.md
 ```
 
 ---
 
-## 🛠 Instalación y Configuración Local
+## ☁️ Conexión a Base de Datos PostgreSQL / Supabase
 
-### 1. Configurar el Backend (FastAPI)
+El backend se conecta directamente a **Supabase PostgreSQL**. 
 
-1. Ve a la raíz del proyecto e instala las dependencias de Python ultra-rápido usando `uv`:
+1. Registra tu proyecto en [supabase.com](https://supabase.com).
+2. En tu archivo `.env` (en la raíz), configura las credenciales obtenidas del dashboard de Supabase:
+   ```env
+   SUPABASE_URL=https://tu-proyecto.supabase.co
+   SUPABASE_KEY=tu-anon-key-o-service-role-key
+   ```
+3. Las políticas de seguridad **Row Level Security (RLS)** y las tablas públicas deben crearse ejecutando los scripts SQL incluidos en el proyecto.
+
+---
+
+## 🚀 Guía de Despliegue en Producción (Arquitectura Híbrida)
+
+La arquitectura recomendada separa el **Frontend PWA** (en Vercel / Cloudflare Pages) del **Backend FastAPI** (en Railway / Render), comunicándolos mediante subdominios HTTPS.
+
+```text
+[ Cliente / PWA ] ---> https://finanzas.tudominio.com (Vercel CDN)
+         │
+         └-----------> https://backend-finanzas.tudominio.com (Railway / Render)
+                                  │
+                                  └---> Supabase (PostgreSQL + Auth)
+```
+
+### 1. Configuración del Backend (Railway / Render)
+
+En el panel de tu hosting de backend, agrega las siguientes Variables de Entorno:
+
+```env
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu-service-role-key
+CORS_ORIGINS=https://finanzas.tudominio.com,https://tu-app.vercel.app
+```
+*(Nota: `CORS_ORIGINS` permite especificar múltiples dominios separados por coma que podrán consumir la API).*
+
+### 2. Configuración del Frontend con `.env` (Vercel)
+
+El frontend incluye un script automático (`frontend/scripts/set-env.js`) que lee variables `.env` o del sistema durante el build y genera la configuración de Angular sin exponer tokens.
+
+1. En la carpeta `frontend/`, puedes crear un archivo `.env`:
+   ```env
+   API_URL=https://backend-finanzas.tudominio.com/api/v1
+   ```
+2. Si despliegas en **Vercel** o **Cloudflare Pages**, simplemente agrega la variable `API_URL` en el panel de **Environment Variables** del proyecto.
+3. El comando `npm run build` ejecutará automáticamente `node scripts/set-env.js && ng build`, inyectando la URL del backend antes de compilar.
+
+### 3. Configuración de Subdominios DNS
+
+En tu proveedor de DNS, añade los registros CNAME correspondientes (evitando el subdominio `api` si ya está en uso por otro servicio):
+
+| Registro | Nombre / Host | Apunta a / Valor | Servicio |
+| :--- | :--- | :--- | :--- |
+| **CNAME** | `finanzas` | `cname.vercel-dns.com` | Frontend PWA (Vercel) |
+| **CNAME** | `backend-finanzas` | `tu-app.up.railway.app` | Backend FastAPI (Railway) |
+
+### 4. Configuración en Supabase Auth
+
+En el dashboard de Supabase (**Authentication -> URL Configuration**):
+* **Site URL:** `https://finanzas.tudominio.com`
+* **Redirect URLs:** Agregar `https://finanzas.tudominio.com/**`
+
+---
+
+## 🛠 Cómo Ejecutar en Desarrollo Local
+
+### 1. Backend (FastAPI)
+
+1. Instala las dependencias mediante `uv`:
    ```bash
    uv sync
    ```
-2. Crea el archivo de variables de entorno:
+2. Crea el archivo `.env` en la raíz copiando `.env.example`:
    ```bash
    cp .env.example .env
    ```
-   _(Asegúrate de llenar `SUPABASE_URL` y `SUPABASE_KEY` con tus credenciales)._
-3. Arranca el servidor:
+3. Inicia el servidor de desarrollo:
    ```bash
    uv run uvicorn main:app --reload
    ```
-   👉 _Swagger UI (Documentación API): `http://127.0.0.1:8000/docs`_
+   👉 *Swagger UI (Documentación de API): `http://127.0.0.1:8000/docs`*
 
-### 2. Configurar el Frontend (Angular)
+### 2. Frontend (Angular PWA)
 
-1. Abre una nueva terminal y navega a la carpeta del frontend:
+1. Entra a la carpeta `frontend` e instala las dependencias de Node:
    ```bash
    cd frontend
-   ```
-2. Instala los paquetes de Node:
-   ```bash
    npm install
    ```
+2. (Opcional) Crea un `.env` en `frontend/.env` con `API_URL=http://localhost:8000/api/v1`.
 3. Inicia el servidor de desarrollo:
    ```bash
    npm run start
    ```
-   👉 _Aplicación Web: `http://localhost:4200`_
-
-_(Nota: Para probar la instalación PWA en el navegador, debes compilar el proyecto usando `npm run build` y servir la carpeta `dist/frontend/browser` con un servidor estático como `http-server`)._
+   👉 *Aplicación Web: `http://localhost:4200`*
 
 ---
 
-## 📌 Estado del Proyecto
+## 📄 Licencia
 
-**Versión 1.0 (Completada):** Todos los módulos core detallados en `PROJECT_CONTEXT.md` (Personal, Tarjetas, Recurrentes, Parejas, Ahorros, Calendario, Analytics y PWA) han sido finalizados y probados con éxito.
+Este proyecto está bajo la Licencia MIT.

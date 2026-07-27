@@ -1,4 +1,5 @@
+// Generado automáticamente por scripts/set-env.js antes del build
 export const environment = {
   production: true,
-  apiUrl: '/api/v1'
+  apiUrl: 'https://backend-finanzas.midominio.com/api/v1'
 };

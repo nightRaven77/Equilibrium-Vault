@@ -42,5 +42,9 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-#Agents
+# Agents
 .agents
+
+# Environment variables
+.env
+
