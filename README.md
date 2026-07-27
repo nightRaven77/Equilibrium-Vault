@@ -67,6 +67,10 @@ El backend se conecta directamente a **Supabase PostgreSQL**.
 
 La arquitectura recomendada separa el **Frontend PWA** (en Vercel / Cloudflare Pages) del **Backend FastAPI** (en Railway / Render), comunicándolos mediante subdominios HTTPS.
 
+> [!TIP]
+> Si vas a realizar el despliegue de ambos servicios en **Render** (Frontend como *Static Site* y Backend como *Web Service*), consulta la guía detallada [DEPLOY_GUIDE.md](file:///c:/Users/erick/Documents/projectosPropios/Equilibrium-Vault/DEPLOY_GUIDE.md) para ver los pasos de configuración y optimizaciones para la capa gratuita.
+
+
 ```text
 [ Cliente / PWA ] ---> https://finanzas.tudominio.com (Vercel CDN)
          │
