@@ -29,7 +29,7 @@ function loadEnv() {
 
 loadEnv();
 
-const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://backend-finanzas.midominio.com/api/v1';
+const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'localhost/api/v1';
 
 const targetPath = path.join(__dirname, '../src/environments/environment.prod.ts');
 const envConfigFile = `// Generado automáticamente por scripts/set-env.js antes del build
