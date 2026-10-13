@@ -1,0 +1,67 @@
+name: Supabase & Backend Keep-Alive
+
+on:
+  schedule:
+    # Se ejecuta cada 3 días a las 05:00 UTC (Supabase pausa proyectos tras 7 días inactivos)
+    - cron: '0 5 */3 * *'
+  workflow_dispatch: # Permite ejecutar el ping manualmente desde la interfaz de GitHub Actions
+
+jobs:
+  keep-alive:
+    name: Ping Supabase & Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping directo a Supabase (PostgREST)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::error::SUPABASE_URL o SUPABASE_KEY no están configurados en los Secrets del repositorio."
+            exit 1
+          fi
+
+          CLEAN_URL="${SUPABASE_URL%/}"
+          TARGET_URL="${CLEAN_URL}/rest/v1/categories?select=id&limit=1"
+
+          echo "Enviando consulta a Supabase: ${CLEAN_URL}..."
+          HTTP_CODE=$(curl -s -o /tmp/supabase_res.json -w "%{http_code}" \
+            -X GET "$TARGET_URL" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            --connect-timeout 20 \
+            --max-time 40)
+
+          echo "Código HTTP recibido de Supabase: $HTTP_CODE"
+          cat /tmp/supabase_res.json && echo ""
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Supabase ping exitoso. La base de datos registró actividad y reseteó el contador de pausa."
+          else
+            echo "::error::Fallo en la respuesta de Supabase (HTTP $HTTP_CODE)."
+            exit 1
+          fi
+
+      - name: Ping al Backend en Render (Opcional)
+        if: "${{ secrets.BACKEND_URL != '' }}"
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          CLEAN_BACKEND="${BACKEND_URL%/}"
+          TARGET_URL="${CLEAN_BACKEND}/health/db"
+          echo "Enviando ping al backend: $TARGET_URL..."
+
+          # Render Free puede tardar ~50s en despertar (cold start), por lo que se configuran timeouts generosos
+          HTTP_CODE=$(curl -s -o /tmp/backend_res.json -w "%{http_code}" \
+            -X GET "$TARGET_URL" \
+            --connect-timeout 60 \
+            --max-time 120)
+
+          echo "Código HTTP recibido del backend: $HTTP_CODE"
+          cat /tmp/backend_res.json && echo ""
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Backend y Supabase respondieron correctamente."
+          else
+            echo "⚠️ El backend respondió con código: $HTTP_CODE"
+          fi

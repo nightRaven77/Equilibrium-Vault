@@ -114,3 +114,39 @@ Dado que el Backend está alojado en la capa gratuita de Render:
 - Si la API no recibe peticiones durante 15 minutos, la instancia entrará en estado de suspensión (apagado automático).
 - La siguiente petición entrante despertará la instancia automáticamente, lo cual puede tardar entre **40 y 50 segundos** (conocido como _cold start_). Las peticiones subsecuentes responderán de inmediato.
 - El Frontend estático **nunca se apaga** y siempre carga al instante, pero mostrará un estado de carga mientras el backend se despierta.
+
+---
+
+## 💓 Paso 5: Keep-Alive para Supabase (Evitar Pausa por Inactividad)
+
+Supabase pausa los proyectos de la capa gratuita tras **7 días sin consultas**. Para evitarlo de manera 100% desatendida y gratuita, el proyecto incluye varias opciones listas para usar:
+
+### Opción A: GitHub Actions (Recomendada, 100% automática y sin cuentas externas)
+
+El repositorio incluye un workflow en `.github/workflows/supabase-keep-alive.yml` programado para ejecutarse cada 3 días.
+
+1. Ve a tu repositorio en GitHub (`Settings` > `Secrets and variables` > `Actions`).
+2. Haz clic en **New repository secret** y añade:
+   - `SUPABASE_URL`: Tu URL del proyecto (ej: `https://xxxx.supabase.co`).
+   - `SUPABASE_KEY`: Tu clave pública `anon` o la `service_role`.
+   - `BACKEND_URL` *(Opcional)*: La URL de tu backend en Render (ej: `https://equilibrium-vault-backend.onrender.com`).
+3. Para probarlo de inmediato: Ve a la pestaña **Actions** en GitHub, selecciona **Supabase & Backend Keep-Alive** y haz clic en **Run workflow**.
+
+### Opción B: Monitor Externo (Evita la pausa de Supabase Y elimina el Cold Start de Render)
+
+Si deseas que tu Backend en Render responda siempre al instante sin esperar los 50 segundos de inicio en frío:
+
+1. Crea una cuenta gratuita en [cron-job.org](https://cron-job.org) o [UptimeRobot](https://uptimerobot.com).
+2. Crea un monitor HTTP apuntando a:
+   `https://tu-backend.onrender.com/health/db`
+3. Configura el intervalo cada **12 a 14 minutos**.
+4. Cada ping ejecutará una consulta real en Supabase y mantendrá despierto el contenedor en Render.
+
+### Opción C: Script Local
+
+Puedes ejecutar manualmente o mediante tu propio cron local el script:
+```bash
+python scripts/ping_supabase.py
+```
+*(Carga automáticamente las credenciales desde tu archivo `.env`).*
+
