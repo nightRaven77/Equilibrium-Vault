@@ -43,10 +43,14 @@ jobs:
           fi
 
       - name: Ping al Backend en Render (Opcional)
-        if: "${{ secrets.BACKEND_URL != '' }}"
         env:
           BACKEND_URL: ${{ secrets.BACKEND_URL }}
         run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "ℹ️ BACKEND_URL no está configurado en los Secrets. Omitiendo ping al backend."
+            exit 0
+          fi
+
           CLEAN_BACKEND="${BACKEND_URL%/}"
           TARGET_URL="${CLEAN_BACKEND}/health/db"
           echo "Enviando ping al backend: $TARGET_URL..."
