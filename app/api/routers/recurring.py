@@ -340,11 +340,24 @@ def pay_occurrence(
     amount = float(req.amount_override) if req.amount_override else float(
         rec_plan["amount"])
 
-    # 5. Crear la transacción personal
+    # 5. Determinar estado de cuenta si se paga con tarjeta de crédito
+    card_statement_id = None
+    if rec_plan.get("payment_method") == "credit_card" and rec_plan.get("credit_card_id"):
+        stmt_resp = supabase.table("card_statements").select("id") \
+            .eq("credit_card_id", str(rec_plan["credit_card_id"])) \
+            .eq("status", "open") \
+            .order("cutoff_date", desc=False) \
+            .limit(1) \
+            .execute()
+        if stmt_resp.data:
+            card_statement_id = stmt_resp.data[0]["id"]
+
+    # 6. Crear la transacción personal
     tx_data = {
         "user_id": current_uid,
         "category_id": rec_plan["category_id"],
         "credit_card_id": rec_plan.get("credit_card_id"),
+        "card_statement_id": card_statement_id,
         "amount": amount,
         "type": "expense",
         "payment_method": rec_plan["payment_method"],

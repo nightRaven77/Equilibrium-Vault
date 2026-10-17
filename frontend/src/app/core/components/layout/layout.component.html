@@ -46,6 +46,12 @@
           </a>
         </li>
         <li>
+          <a routerLink="/budgets" routerLinkActive="text-[#47EAED] border-l-2 border-[#47EAED] bg-[#201F1F]" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
+            <span class="material-symbols-outlined">pie_chart</span>
+            Presupuestos
+          </a>
+        </li>
+        <li>
           <a routerLink="/couples" routerLinkActive="text-[#47EAED] border-l-2 border-[#47EAED] bg-[#201F1F]" class="flex items-center gap-3 text-[#E5E2E1]/60 py-3 px-6 hover:text-[#E5E2E1] hover:bg-[#201F1F] transition-all duration-200 active:scale-[0.98]">
             <span class="material-symbols-outlined">favorite</span>
             Couples
@@ -112,9 +118,14 @@
     </div>
     
     <div class="flex items-center gap-3 md:gap-6">
-      <button class="relative text-[#E5E2E1]/60 hover:text-primary transition-colors cursor-pointer active:opacity-80">
+      <button 
+        (click)="notificationService.requestPermission()" 
+        title="Activar o verificar notificaciones Web Push"
+        class="relative text-[#E5E2E1]/60 hover:text-primary transition-colors cursor-pointer active:opacity-80">
         <span class="material-symbols-outlined">notifications</span>
-        <span class="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-full border-2 border-[#1C1B1B]"></span>
+        @if (notificationService.permission() === 'granted') {
+          <span class="absolute top-0 right-0 w-1.5 h-1.5 bg-primary rounded-full border-2 border-[#1C1B1B]"></span>
+        }
       </button>
       
       <a routerLink="/profile" class="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-white/5 rounded-xl p-1 pr-2 transition-colors">
@@ -128,11 +139,44 @@
   </header>
 
   <!-- Main Content Area -->
-  <main class="md:ml-64 pt-20 md:pt-24 pb-12 px-4 md:px-8 min-h-screen transition-all duration-300">
+  <main class="md:ml-64 pt-20 md:pt-24 pb-24 md:pb-12 px-4 md:px-8 min-h-screen transition-all duration-300">
     <div class="max-w-[1400px] mx-auto">
       <router-outlet></router-outlet>
     </div>
   </main>
+
+  <!-- Mobile Bottom Navigation Bar (md:hidden) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-[#1C1B1B]/95 backdrop-blur-xl border-t border-[#3B4949]/20 px-4 py-2 flex items-center justify-around md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.5)]">
+    <a routerLink="/dashboard" routerLinkActive="text-[#47EAED]" class="flex flex-col items-center gap-0.5 text-[#E5E2E1]/60 py-1 px-2 transition-all">
+      <span class="material-symbols-outlined text-xl">dashboard</span>
+      <span class="text-[8px] font-label font-bold tracking-wider uppercase">Inicio</span>
+    </a>
+    <a routerLink="/budgets" routerLinkActive="text-[#47EAED]" class="flex flex-col items-center gap-0.5 text-[#E5E2E1]/60 py-1 px-2 transition-all">
+      <span class="material-symbols-outlined text-xl">pie_chart</span>
+      <span class="text-[8px] font-label font-bold tracking-wider uppercase">Presupuesto</span>
+    </a>
+
+    <!-- Center Floating Action Button (FAB) for Add Transaction -->
+    <button 
+      type="button"
+      (click)="openTransactionModal()"
+      class="w-12 h-12 -mt-5 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_0_25px_rgba(71,234,237,0.45)] active:scale-90 transition-all cursor-pointer"
+      aria-label="Registrar nueva transacción">
+      <span class="material-symbols-outlined text-2xl font-bold">add</span>
+    </button>
+
+    <a routerLink="/transactions" routerLinkActive="text-[#47EAED]" class="flex flex-col items-center gap-0.5 text-[#E5E2E1]/60 py-1 px-2 transition-all">
+      <span class="material-symbols-outlined text-xl">receipt_long</span>
+      <span class="text-[8px] font-label font-bold tracking-wider uppercase">Historial</span>
+    </a>
+    <button 
+      type="button"
+      (click)="toggleSidebar()" 
+      class="flex flex-col items-center gap-0.5 text-[#E5E2E1]/60 py-1 px-2 transition-all cursor-pointer">
+      <span class="material-symbols-outlined text-xl">menu</span>
+      <span class="text-[8px] font-label font-bold tracking-wider uppercase">Menú</span>
+    </button>
+  </nav>
 </div>
 
 <!-- Modals Globales -->

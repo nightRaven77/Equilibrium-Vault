@@ -58,6 +58,24 @@ export class AlertService {
     ObsidianToast.fire({ icon: 'info', title, text });
   }
 
+  /** Método universal show(type, title, text) */
+  show(type: 'success' | 'error' | 'warning' | 'info', title: string, text?: string) {
+    switch (type) {
+      case 'success':
+        this.success(title, text);
+        break;
+      case 'error':
+        this.error(title, text);
+        break;
+      case 'warning':
+        this.warning(title, text);
+        break;
+      case 'info':
+        this.info(title, text);
+        break;
+    }
+  }
+
   /** Modal de confirmación destructiva (eliminar, etc.) */
   confirm(title: string, text: string, confirmText = 'Sí, eliminar'): Promise<SweetAlertResult> {
     return ObsidianAlert.fire({

@@ -76,11 +76,8 @@ export class TransactionsComponent implements OnInit {
   }
 
   loadCategories() {
-    // Load both types
-    this.financeService.getCategories('expense').subscribe((exp) => {
-      this.financeService.getCategories('income').subscribe((inc) => {
-        this.categories.set([...exp, ...inc]);
-      });
+    this.financeService.getCategories().subscribe((cats) => {
+      this.categories.set(cats);
     });
   }
 

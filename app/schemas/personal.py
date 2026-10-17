@@ -87,3 +87,17 @@ class InstallmentPlanResponse(BaseModel):
     pending_count: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReceiptOCRResponse(BaseModel):
+    merchant_name: Optional[str] = None
+    amount: Optional[Decimal] = None
+    transaction_date: Optional[date] = None
+    suggested_category: Optional[str] = None
+    category_id: Optional[UUID] = None
+    notes: Optional[str] = None
+    confidence: float = 0.9
+    raw_response: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+

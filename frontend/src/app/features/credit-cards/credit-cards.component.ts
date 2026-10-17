@@ -1,11 +1,10 @@
 import { Component, inject, OnInit, signal, effect, computed } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { map } from 'rxjs/operators';
 import { FinanceService } from '../../core/services/finance.service';
 import { RefreshService } from '../../core/services/refresh.service';
 import { ModalService } from '../../core/services/modal.service';
-import { CreditCard } from '../../core/models/finance.model';
+import { CreditCard, CardStatement } from '../../core/models/finance.model';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { EChartsOption } from 'echarts';
 import { Router } from '@angular/router';
@@ -14,7 +13,7 @@ import { AlertService } from '../../core/services/alert.service';
 @Component({
   selector: 'app-credit-cards',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, NgxEchartsDirective],
+  imports: [CommonModule, CurrencyPipe, DatePipe, NgxEchartsDirective],
   templateUrl: './credit-cards.component.html',
 })
 export class CreditCardsComponent implements OnInit {
@@ -23,6 +22,10 @@ export class CreditCardsComponent implements OnInit {
   private router = inject(Router);
   private alertService = inject(AlertService);
   public modalService = inject(ModalService);
+
+  public selectedStatementsCard = signal<CreditCard | null>(null);
+  public cardStatements = signal<CardStatement[]>([]);
+  public isLoadingStatements = signal<boolean>(false);
 
   constructor() {
     effect(() => {
@@ -107,22 +110,15 @@ export class CreditCardsComponent implements OnInit {
   fetchCards() {
     this.isLoading.set(true);
 
-    forkJoin({
-      cards: this.financeService.getCreditCards(),
-      transactions: this.financeService.getPersonalTransactions(),
-    })
+    this.financeService.getCreditCards()
       .pipe(
-        map(({ cards, transactions }) => {
+        map((cards) => {
           const activeCards = cards.filter((c) => c.is_active);
           const total = activeCards.reduce((acc, curr) => acc + Number(curr.credit_limit), 0);
 
           const enrichedCards = activeCards.map((card) => {
-            // Sum all expenses for this card
-            const cardTxs = transactions.filter(
-              (t) => t.credit_card_id === card.id && t.type === 'expense',
-            );
-            const balance = cardTxs.reduce((sum, tx) => sum + Number(tx.amount), 0);
-
+            // Utilizar el saldo vivo calculado por el backend (cortes abiertos/vencidos no pagados)
+            const balance = Number((card as any).current_balance ?? card.currentBalance ?? 0);
             const limit = Number(card.credit_limit);
             const usagePct = limit > 0 ? (balance / limit) * 100 : 0;
 
@@ -194,6 +190,59 @@ export class CreditCardsComponent implements OnInit {
 
   editCard(id: string) {
     this.modalService.openCardModal(id);
+  }
+
+  openStatementsModal(card: CreditCard) {
+    this.selectedStatementsCard.set(card);
+    this.isLoadingStatements.set(true);
+    this.financeService.getCardStatements(card.id).subscribe({
+      next: (stmts) => {
+        this.cardStatements.set(stmts);
+        this.isLoadingStatements.set(false);
+      },
+      error: (err) => {
+        console.error('Error fetching statements:', err);
+        this.isLoadingStatements.set(false);
+      },
+    });
+  }
+
+  closeStatementsModal() {
+    this.selectedStatementsCard.set(null);
+    this.cardStatements.set([]);
+  }
+
+  payStatement(stmt: CardStatement) {
+    const card = this.selectedStatementsCard();
+    if (!card) return;
+
+    this.alertService
+      .confirm(
+        '¿Liquidar estado de cuenta?',
+        `Se marcará como pagado el corte del ${stmt.cutoff_date} para la tarjeta ${card.bank_name} (****${card.last_four}).`,
+        'Sí, liquidar corte',
+      )
+      .then((confirmed) => {
+        if (confirmed.isConfirmed) {
+          this.financeService
+            .payCardStatement(card.id, stmt.id, {
+              payment_method: 'transfer',
+              register_transaction: true,
+            })
+            .subscribe({
+              next: (res) => {
+                this.alertService.success('¡Corte Liquidado!', res.message);
+                this.openStatementsModal(card);
+                this.refreshService.triggerRefresh();
+              },
+              error: (err) => {
+                console.error('Error al pagar el corte:', err);
+                const msg = err.error?.detail?.message || err.error?.detail || 'No se pudo liquidar el estado de cuenta.';
+                this.alertService.error('Error', msg);
+              },
+            });
+        }
+      });
   }
 
   deleteCard(id: string) {

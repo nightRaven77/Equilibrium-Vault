@@ -23,7 +23,16 @@ import {
   CreditCardCreate,
   CreditCardUpdate,
   CardStatement,
+  StatementPayRequest,
+  StatementPayResponse,
+  CategoryCreate,
+  CategoryUpdate,
   InstallmentPlan,
+  Budget,
+  BudgetCreate,
+  BudgetUpdate,
+  Rule503020Response,
+  ReceiptOCRResponse,
 } from '../models/finance.model';
 
 @Injectable({
@@ -40,13 +49,31 @@ export class FinanceService {
     return this.http.get<Couple[]>(`${this.apiUrl}/couples/`);
   }
 
-  /**
-   * Obtiene la lista de transacciones personales
-   * Crea un objeto de tipo Transaction(desde models/finance.model.ts) y regresa un array
-   * de transacciones
-   */
-  getPersonalTransactions(): Observable<Transaction[]> {
-    return this.http.get<Transaction[]>(`${this.apiUrl}/personal/`);
+  getPersonalTransactions(
+    excludeChildren: boolean = true,
+    filters?: {
+      limit?: number;
+      offset?: number;
+      start_date?: string;
+      end_date?: string;
+      type?: string;
+      category_id?: string;
+      payment_method?: string;
+      credit_card_id?: string;
+    }
+  ): Observable<Transaction[]> {
+    let params = `?exclude_children=${excludeChildren}`;
+    if (filters) {
+      if (filters.limit !== undefined) params += `&limit=${filters.limit}`;
+      if (filters.offset !== undefined) params += `&offset=${filters.offset}`;
+      if (filters.start_date) params += `&start_date=${filters.start_date}`;
+      if (filters.end_date) params += `&end_date=${filters.end_date}`;
+      if (filters.type) params += `&type=${filters.type}`;
+      if (filters.category_id) params += `&category_id=${filters.category_id}`;
+      if (filters.payment_method) params += `&payment_method=${filters.payment_method}`;
+      if (filters.credit_card_id) params += `&credit_card_id=${filters.credit_card_id}`;
+    }
+    return this.http.get<Transaction[]>(`${this.apiUrl}/personal/${params}`);
   }
 
   /**
@@ -166,10 +193,11 @@ export class FinanceService {
   }
 
   /**
-   * Obtiene las categorías del usuario
+   * Obtiene las categorías del usuario (todas o por tipo)
    */
-  getCategories(categoryType: string): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.apiUrl}/categories/${categoryType}`);
+  getCategories(categoryType?: string): Observable<Category[]> {
+    const url = categoryType ? `${this.apiUrl}/categories/${categoryType}` : `${this.apiUrl}/categories/`;
+    return this.http.get<Category[]>(url);
   }
 
   /**
@@ -221,5 +249,84 @@ export class FinanceService {
       `${this.apiUrl}/personal/installments/${planId}/cancel`,
       {},
     );
+  }
+
+  /**
+   * Paga o abona a un estado de cuenta de tarjeta de crédito
+   */
+  payCardStatement(
+    cardId: string,
+    statementId: string,
+    data: StatementPayRequest,
+  ): Observable<StatementPayResponse> {
+    return this.http.post<StatementPayResponse>(
+      `${this.apiUrl}/cards/${cardId}/statements/${statementId}/pay`,
+      data,
+    );
+  }
+
+  /**
+   * Crea una nueva categoría
+   */
+  createCategory(data: CategoryCreate): Observable<Category> {
+    return this.http.post<Category>(`${this.apiUrl}/categories/`, data);
+  }
+
+  /**
+   * Actualiza una categoría existente
+   */
+  updateCategory(id: string, data: CategoryUpdate): Observable<Category> {
+    return this.http.patch<Category>(`${this.apiUrl}/categories/${id}`, data);
+  }
+
+  /**
+   * Elimina una categoría personalizada
+   */
+  deleteCategory(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/categories/${id}`);
+  }
+
+  /**
+   * Obtiene la lista de presupuestos por categoría con consumo del mes actual
+   */
+  getBudgets(): Observable<Budget[]> {
+    return this.http.get<Budget[]>(`${this.apiUrl}/budgets/`);
+  }
+
+  /**
+   * Obtiene el análisis y distribución de la regla 50/30/20 del mes actual
+   */
+  get503020Summary(): Observable<Rule503020Response> {
+    return this.http.get<Rule503020Response>(`${this.apiUrl}/budgets/50-30-20`);
+  }
+
+  /**
+   * Crea un nuevo presupuesto mensual para una categoría
+   */
+  createBudget(data: BudgetCreate): Observable<Budget> {
+    return this.http.post<Budget>(`${this.apiUrl}/budgets/`, data);
+  }
+
+  /**
+   * Modifica el límite o bucket de un presupuesto existente
+   */
+  updateBudget(id: string, data: BudgetUpdate): Observable<Budget> {
+    return this.http.patch<Budget>(`${this.apiUrl}/budgets/${id}`, data);
+  }
+
+  /**
+   * Elimina un presupuesto
+   */
+  deleteBudget(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/budgets/${id}`);
+  }
+
+  /**
+   * Procesa la imagen de un ticket o recibo usando Gemini Vision OCR
+   */
+  ocrReceipt(file: File): Observable<ReceiptOCRResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ReceiptOCRResponse>(`${this.apiUrl}/personal/ocr-receipt`, formData);
   }
 }

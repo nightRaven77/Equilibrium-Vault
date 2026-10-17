@@ -12,6 +12,7 @@ import { CalendarComponent } from './features/calendar/calendar.component';
 import { TransactionsComponent } from './features/transactions/transactions.component';
 import { LayoutComponent } from './core/components/layout/layout.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { BudgetsComponent } from './features/budgets/budgets.component';
 
 export const routes: Routes = [
   // 1. Redirección inicial limpia
@@ -30,6 +31,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'credit-cards', component: CreditCardsComponent },
       { path: 'savings', component: SavingsComponent },
+      { path: 'budgets', component: BudgetsComponent },
       { path: 'couples', component: CouplesComponent },
       { path: 'recurring', component: RecurringComponent },
       { path: 'calendar', component: CalendarComponent },

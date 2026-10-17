@@ -87,7 +87,14 @@
                   <p class="font-label text-[8px] text-on-surface-variant uppercase tracking-tighter mt-0.5">VAULT_TIME_STAMP</p>
                 </td>
                 <td class="px-6 py-5">
-                  <p class="font-body text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{{ tx.description }}</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="font-body text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{{ tx.description }}</p>
+                    @if (tx.is_installment) {
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-primary/15 text-primary border border-primary/30 uppercase tracking-wider">
+                        {{ tx.installment_months }} MSI
+                      </span>
+                    }
+                  </div>
                   @if (tx.notes) {
                     <p class="text-[10px] text-on-surface-variant truncate max-w-[200px] mt-0.5 italic opacity-60">"{{ tx.notes }}"</p>
                   }

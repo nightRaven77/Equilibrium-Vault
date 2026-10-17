@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import date
 from uuid import UUID
 
-from app.schemas.enums import StatementStatus
+from app.schemas.enums import StatementStatus, PaymentMethod
 
 
 class CreditCardBase(BaseModel):
@@ -35,6 +35,7 @@ class CreditCardUpdate(BaseModel):
 class CreditCardResponse(CreditCardBase):
     id: UUID
     user_id: UUID
+    current_balance: Optional[Decimal] = Decimal("0.00")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -49,3 +50,19 @@ class CardStatementResponse(BaseModel):
     status: StatementStatus
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StatementPayRequest(BaseModel):
+    amount: Optional[Decimal] = Field(None, gt=0, decimal_places=2, description="Monto a pagar; si se omite, se liquida la deuda calculada del corte")
+    payment_date: date = Field(default_factory=date.today)
+    payment_method: PaymentMethod = PaymentMethod.transfer
+    register_transaction: bool = True
+    category_id: Optional[UUID] = None
+    notes: Optional[str] = None
+
+
+class StatementPayResponse(BaseModel):
+    statement: CardStatementResponse
+    payment_amount: Decimal
+    transaction_id: Optional[UUID] = None
+    message: str

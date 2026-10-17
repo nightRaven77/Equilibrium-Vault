@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { ModalService } from '../../services/modal.service';
+import { NotificationService } from '../../services/notification.service';
 import { TransactionModalComponent } from '../transaction-modal/transaction-modal.component';
 import { CardModalComponent } from '../card-modal/card-modal.component';
 import { SavingGoalModalComponent } from '../saving-goal-modal/saving-goal-modal.component';
@@ -20,6 +21,7 @@ import { CoupleTxModalComponent } from '../couple-tx-modal/couple-tx-modal.compo
 export class LayoutComponent {
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
+  public notificationService = inject(NotificationService);
   private router = inject(Router);
 
   // Signal para controlar el sidebar en móviles

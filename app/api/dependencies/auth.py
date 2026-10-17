@@ -13,8 +13,8 @@ def get_current_user_supplier(credentials: HTTPAuthorizationCredentials = Depend
     """
     token = credentials.credentials
     
-    # Creamos un cliente fresco para esta request
-    supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+    # Creamos un cliente fresco para esta request utilizando la anon key para respetar RLS
+    supabase: Client = create_client(settings.SUPABASE_URL, settings.anon_key)
     
     # Configuramos el token localmente en el cliente para aplicar RLS
     try:

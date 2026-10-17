@@ -1,5 +1,6 @@
 import calendar
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,6 +12,8 @@ from app.schemas.cards import (
     CreditCardUpdate,
     CreditCardResponse,
     CardStatementResponse,
+    StatementPayRequest,
+    StatementPayResponse,
 )
 
 router = APIRouter(prefix="/cards", tags=["cards"])
@@ -30,12 +33,43 @@ def calculate_next_cutoff_python(cutoff_day: int, from_date: date) -> date:
     return date(target_year, target_month, actual_day)
 
 
+def _calculate_card_balance(supabase: Client, card_id: str) -> Decimal:
+    """Calcula el saldo vivo real de la tarjeta sumando gastos en cortes no pagados o sin corte."""
+    stmts_resp = supabase.table("card_statements").select("id").eq("credit_card_id", card_id).neq("status", "paid").execute()
+    unpaid_stmt_ids = [s["id"] for s in (stmts_resp.data or [])]
+
+    balance = Decimal("0.00")
+    if unpaid_stmt_ids:
+        tx_resp = supabase.table("personal_transactions").select("amount") \
+            .eq("credit_card_id", card_id) \
+            .eq("type", "expense") \
+            .in_("card_statement_id", unpaid_stmt_ids) \
+            .execute()
+        if tx_resp.data:
+            balance += sum([Decimal(str(tx.get("amount", 0))) for tx in tx_resp.data])
+
+    # Transacciones asignadas a la tarjeta sin corte (excluyendo hijas de MSI para no duplicar)
+    unassigned_tx = supabase.table("personal_transactions").select("amount") \
+        .eq("credit_card_id", card_id) \
+        .eq("type", "expense") \
+        .is_("card_statement_id", "null") \
+        .is_("parent_transaction_id", "null") \
+        .execute()
+    if unassigned_tx.data:
+        balance += sum([Decimal(str(tx.get("amount", 0))) for tx in unassigned_tx.data])
+
+    return balance
+
+
 @router.get("/", response_model=List[CreditCardResponse])
 def get_credit_cards(supabase: Client = Depends(get_current_user_supplier)):
-    """Obtiene las tarjetas de crédito activas del usuario autenticado."""
+    """Obtiene las tarjetas de crédito activas del usuario autenticado con su saldo vivo."""
     response = supabase.table("credit_cards").select(
         "*").eq("is_active", True).execute()
-    return response.data
+    cards = response.data or []
+    for card in cards:
+        card["current_balance"] = _calculate_card_balance(supabase, card["id"])
+    return cards
 
 
 @router.post("/", response_model=CreditCardResponse, status_code=status.HTTP_201_CREATED)
@@ -115,7 +149,9 @@ def get_credit_card(id: UUID, supabase: Client = Depends(get_current_user_suppli
         "*").eq("id", str(id)).execute()
     if not response.data:
         raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
-    return response.data[0]
+    card = response.data[0]
+    card["current_balance"] = _calculate_card_balance(supabase, str(id))
+    return card
 
 
 @router.patch("/{id}", response_model=CreditCardResponse)
@@ -181,18 +217,14 @@ def delete_credit_card(id: UUID, supabase: Client = Depends(get_current_user_sup
     if not card_resp.data:
         raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
 
-    # 1. Validar que no haya deuda en estados de cuenta (total_balance > 0 y status != 'paid')
-    statements_resp = supabase.table("card_statements").select("id, status, total_balance").eq(
-        "credit_card_id", str(id)).gt("total_balance", 0).execute()
-    if statements_resp.data:
-        unpaid_statements = [
-            s for s in statements_resp.data if s.get("status") != "paid"]
-        if unpaid_statements:
-            raise HTTPException(
-                status_code=400,
-                detail={"code": "HAS_DEBT",
-                        "message": "No puedes eliminar esta tarjeta porque tiene saldo pendiente por pagar."}
-            )
+    # 1. Validar que no haya saldo pendiente por pagar (utilizando el cálculo real de deuda viva)
+    total_debt = _calculate_card_balance(supabase, str(id))
+    if total_debt > Decimal("0.00"):
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "HAS_DEBT",
+                    "message": f"No puedes eliminar esta tarjeta porque tiene un saldo pendiente de ${total_debt:,.2f}."}
+        )
 
     # 2. Validar que no haya MSI activos
     installments_resp = supabase.table("installment_plans").select(
@@ -225,3 +257,95 @@ def get_card_statements(id: UUID, supabase: Client = Depends(get_current_user_su
     response = supabase.table("card_statements").select(
         "*").eq("credit_card_id", str(id)).order("cutoff_date", desc=True).execute()
     return response.data
+
+
+@router.post("/{id}/statements/{statement_id}/pay", response_model=StatementPayResponse)
+def pay_card_statement(
+    id: UUID,
+    statement_id: UUID,
+    payment_data: StatementPayRequest,
+    supabase: Client = Depends(get_current_user_supplier)
+):
+    """
+    Registra el pago de un estado de cuenta (corte de tarjeta).
+    - Marca el corte como pagado o amortiza saldo parcial.
+    - Opcionalmente genera la transacción personal de egreso correspondiente.
+    """
+    user = supabase.auth.get_user().user
+
+    # 1. Validar existencia de la tarjeta
+    card_resp = supabase.table("credit_cards").select("*").eq("id", str(id)).execute()
+    if not card_resp.data:
+        raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+    card = card_resp.data[0]
+
+    # 2. Validar que el corte existe y pertenece a la tarjeta
+    stmt_resp = supabase.table("card_statements").select("*").eq("id", str(statement_id)).eq("credit_card_id", str(id)).execute()
+    if not stmt_resp.data:
+        raise HTTPException(status_code=404, detail="Estado de cuenta no encontrado para esta tarjeta")
+    statement = stmt_resp.data[0]
+
+    if statement.get("status") == "paid":
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "ALREADY_PAID", "message": "Este estado de cuenta ya está liquidado."}
+        )
+
+    # 3. Calcular deuda viva del corte
+    tx_resp = supabase.table("personal_transactions").select("amount") \
+        .eq("card_statement_id", str(statement_id)) \
+        .eq("type", "expense") \
+        .execute()
+    statement_debt = sum([Decimal(str(tx.get("amount", 0))) for tx in (tx_resp.data or [])])
+
+    if payment_data.amount is None or payment_data.amount >= statement_debt:
+        pay_amount = statement_debt if statement_debt > Decimal("0.00") else (payment_data.amount or Decimal("0.00"))
+        new_status = "paid"
+        new_balance = Decimal("0.00")
+    else:
+        pay_amount = payment_data.amount
+        new_status = "open"
+        new_balance = statement_debt - pay_amount
+
+    # 4. Actualizar el estado de cuenta
+    upd_resp = supabase.table("card_statements").update({
+        "status": new_status,
+        "total_balance": float(new_balance),
+    }).eq("id", str(statement_id)).execute()
+
+    if not upd_resp.data:
+        raise HTTPException(status_code=500, detail="Error al actualizar el estado de cuenta")
+    updated_stmt = upd_resp.data[0]
+
+    # 5. Registrar transacción personal de egreso si se solicitó
+    created_tx_id = None
+    if payment_data.register_transaction and pay_amount > Decimal("0.00"):
+        category_id = payment_data.category_id
+        if not category_id:
+            cat_resp = supabase.table("categories").select("id").eq("type", "expense").execute()
+            if cat_resp.data:
+                category_id = UUID(cat_resp.data[0]["id"])
+
+        if category_id:
+            tx_payload = {
+                "user_id": str(user.id),
+                "category_id": str(category_id),
+                "credit_card_id": None,
+                "card_statement_id": None,
+                "amount": float(pay_amount),
+                "type": "expense",
+                "payment_method": payment_data.payment_method.value,
+                "description": f"Pago Tarjeta {card['bank_name']} (****{card['last_four']})",
+                "notes": payment_data.notes or f"Pago de corte con fecha {statement['cutoff_date']}",
+                "transaction_date": str(payment_data.payment_date),
+            }
+            tx_create_resp = supabase.table("personal_transactions").insert(tx_payload).execute()
+            if tx_create_resp.data:
+                created_tx_id = UUID(tx_create_resp.data[0]["id"])
+
+    return StatementPayResponse(
+        statement=updated_stmt,
+        payment_amount=pay_amount,
+        transaction_id=created_tx_id,
+        message=f"Estado de cuenta {'liquidado' if new_status == 'paid' else 'actualizado'} exitosamente."
+    )

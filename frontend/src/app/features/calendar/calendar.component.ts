@@ -64,7 +64,7 @@ export class CalendarComponent implements OnInit {
     this.isLoading.set(true);
 
     forkJoin({
-      transactions: this.financeService.getPersonalTransactions(),
+      transactions: this.financeService.getPersonalTransactions(false),
       upcoming: this.recurringService.getUpcomingPayments(),
       categories: this.financeService.getCategories('expense'),
     }).subscribe({

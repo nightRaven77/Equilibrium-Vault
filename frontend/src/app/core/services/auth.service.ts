@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { HttpClient, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
+import { Observable, BehaviorSubject, tap, filter, switchMap, take, throwError, catchError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface LoginResponse {
@@ -28,6 +28,9 @@ export class AuthService {
   public currentToken = signal<string | null>(null);
   public currentRefreshToken = signal<string | null>(null);
   public currentUser = signal<UserProfile | null>(null);
+
+  private isRefreshing = false;
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor() {
     const savedToken = localStorage.getItem('supabase_token');
@@ -81,6 +84,47 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/refresh`, { refresh_token: refresh }).pipe(
       tap((res) => this._persistSession(res))
     );
+  }
+
+  handleTokenRefresh(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      return this.refreshToken().pipe(
+        switchMap((res) => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(res.access_token);
+          return next(
+            req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${res.access_token}`,
+              },
+            }),
+          );
+        }),
+        catchError((refreshErr) => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(null);
+          this.logout();
+          return throwError(() => refreshErr);
+        }),
+      );
+    } else {
+      return this.refreshTokenSubject.pipe(
+        filter((token): token is string => token !== null),
+        take(1),
+        switchMap((newToken) => {
+          return next(
+            req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${newToken}`,
+              },
+            }),
+          );
+        }),
+      );
+    }
   }
 
   logout() {

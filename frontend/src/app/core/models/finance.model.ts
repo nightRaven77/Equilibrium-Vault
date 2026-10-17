@@ -41,6 +41,20 @@ export interface Category {
   icon: string;
   color: string;
   type: 'income' | 'expense';
+  is_default?: boolean;
+}
+
+export interface CategoryCreate {
+  name: string;
+  icon: string;
+  color: string;
+  type: 'income' | 'expense' | 'transfer';
+}
+
+export interface CategoryUpdate {
+  name?: string;
+  icon?: string;
+  color?: string;
 }
 
 export interface MonthlySummary {
@@ -153,7 +167,23 @@ export interface CardStatement {
   payment_due_date: string;
   total_balance: number;
   minimum_payment: number;
-  status: 'open' | 'closed' | 'paid';
+  status: 'open' | 'closed' | 'paid' | 'overdue';
+}
+
+export interface StatementPayRequest {
+  amount?: number | null;
+  payment_date?: string;
+  payment_method: string;
+  register_transaction?: boolean;
+  category_id?: string | null;
+  notes?: string | null;
+}
+
+export interface StatementPayResponse {
+  statement: CardStatement;
+  payment_amount: number;
+  transaction_id?: string | null;
+  message: string;
 }
 
 export interface InstallmentPlan {
@@ -319,4 +349,66 @@ export interface UpcomingPayment {
   category_name?: string;
   category_icon?: string;
   category_color?: string;
+}
+
+export type RuleBucket = 'needs' | 'wants' | 'savings';
+
+export interface Budget {
+  id: string;
+  user_id: string;
+  category_id: string;
+  monthly_limit: number;
+  rule_bucket: RuleBucket;
+  category_name?: string | null;
+  category_icon?: string | null;
+  category_color?: string | null;
+  spent_this_month: number;
+  remaining: number;
+  percentage_used: number;
+  status: 'normal' | 'warning' | 'exceeded';
+  created_at?: string;
+}
+
+export interface BudgetCreate {
+  category_id: string;
+  monthly_limit: number;
+  rule_bucket: RuleBucket;
+}
+
+export interface BudgetUpdate {
+  monthly_limit?: number;
+  rule_bucket?: RuleBucket;
+}
+
+export interface RuleBucketSummary {
+  bucket: RuleBucket;
+  target_pct: number;
+  target_amount: number;
+  budgeted_amount: number;
+  spent_amount: number;
+  percentage_of_income: number;
+  status: 'optimal' | 'under_budget' | 'over_budget';
+}
+
+export interface Rule503020Response {
+  current_month: string;
+  monthly_income: number;
+  total_budgeted: number;
+  total_spent: number;
+  needs: RuleBucketSummary;
+  wants: RuleBucketSummary;
+  savings: RuleBucketSummary;
+  unallocated_income: number;
+  overall_health: 'balanced' | 'warning' | 'deficit';
+}
+
+export interface ReceiptOCRResponse {
+  merchant_name?: string | null;
+  amount?: number | null;
+  transaction_date?: string | null;
+  suggested_category?: string | null;
+  category_id?: string | null;
+  notes?: string | null;
+  confidence: number;
+  raw_response?: string | null;
 }

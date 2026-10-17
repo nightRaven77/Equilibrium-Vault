@@ -1,0 +1,426 @@
+<div class="space-y-8 animate-in fade-in duration-300">
+  
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/15 pb-6">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-2xl">pie_chart</span>
+        <h1 class="text-2xl font-bold font-headline tracking-tight text-on-surface uppercase">
+          Presupuestos & Balance 50/30/20
+        </h1>
+      </div>
+      <p class="font-label text-xs tracking-wider text-on-surface-variant uppercase mt-1">
+        Asignación de topes mensuales y distribución saludable del ingreso
+      </p>
+    </div>
+
+    <button
+      (click)="openCreateModal()"
+      class="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-on-primary font-label text-xs font-bold uppercase tracking-wider rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(71,234,237,0.25)]"
+    >
+      <span class="material-symbols-outlined text-base">add</span>
+      Nuevo Presupuesto
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-24 space-y-4">
+      <div class="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      <p class="font-label text-xs uppercase tracking-widest text-on-surface-variant">Cargando presupuestos...</p>
+    </div>
+  } @else {
+
+    <!-- KPI Summary Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Total Budgeted vs Spent -->
+      <div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span class="font-label text-[10px] uppercase tracking-widest">Presupuesto Mensual</span>
+          <span class="material-symbols-outlined text-lg text-primary">account_balance_wallet</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold font-headline text-on-surface">
+            {{ totalSpent() | currency:'USD':'symbol':'1.2-2' }}
+            <span class="text-xs font-normal text-on-surface-variant font-sans">
+              / {{ totalBudgeted() | currency:'USD':'symbol':'1.0-0' }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-xs mt-2 text-on-surface-variant">
+            <span>Consumo Global</span>
+            <span class="font-mono font-semibold" [class.text-error]="overallPercentage() >= 100" [class.text-primary]="overallPercentage() < 80">
+              {{ overallPercentage() }}%
+            </span>
+          </div>
+          <div class="w-full bg-surface-container-highest h-2 rounded-full mt-1.5 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [class.bg-primary]="overallPercentage() < 80"
+              [class.bg-amber-400]="overallPercentage() >= 80 && overallPercentage() < 100"
+              [class.bg-error]="overallPercentage() >= 100"
+              [style.width.%]="overallPercentage()"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remaining Balance -->
+      <div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span class="font-label text-[10px] uppercase tracking-widest">Saldo Restante</span>
+          <span class="material-symbols-outlined text-lg text-secondary">savings</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold font-headline text-primary">
+            {{ totalRemaining() | currency:'USD':'symbol':'1.2-2' }}
+          </div>
+          <p class="text-xs text-on-surface-variant mt-2">
+            Disponible para gastar sin sobrepasar tus límites del mes.
+          </p>
+        </div>
+      </div>
+
+      <!-- 50/30/20 Financial Health -->
+      <div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span class="font-label text-[10px] uppercase tracking-widest">Salud Financiera</span>
+          <span class="material-symbols-outlined text-lg text-primary">health_and_safety</span>
+        </div>
+        <div>
+          @if (ruleSummary(); as summary) {
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold font-label uppercase tracking-wider"
+                [class.bg-emerald-500/20]="summary.overall_health === 'balanced'"
+                [class.text-emerald-300]="summary.overall_health === 'balanced'"
+                [class.bg-amber-500/20]="summary.overall_health === 'warning'"
+                [class.text-amber-300]="summary.overall_health === 'warning'"
+                [class.bg-error/20]="summary.overall_health === 'deficit'"
+                [class.text-error]="summary.overall_health === 'deficit'"
+              >
+                {{ summary.overall_health === 'balanced' ? 'Equilibrado' : summary.overall_health === 'warning' ? 'En Observación' : 'Déficit' }}
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant mt-2 font-mono">
+              Ingreso Mensual: {{ summary.monthly_income | currency:'USD':'symbol':'1.0-0' }}
+            </p>
+          } @else {
+            <div class="text-sm text-on-surface-variant">Sin transacciones registradas este mes</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- 50/30/20 Breakdown Cards -->
+    @if (ruleSummary(); as summary) {
+      <div class="space-y-4">
+        <h2 class="font-headline font-bold text-sm tracking-wider uppercase text-on-surface flex items-center gap-2">
+          <span>Distribución Regla 50 / 30 / 20</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- 50% Needs -->
+          <div class="bg-surface-container-low border border-cyan-500/20 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-xs uppercase tracking-wider text-cyan-400 font-bold">50% Necesidades</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
+                Meta: {{ summary.needs.target_amount | currency:'USD':'symbol':'1.0-0' }}
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant">Vivienda, despensa, transporte, servicios y salud</p>
+            <div class="pt-2">
+              <div class="flex justify-between text-xs font-mono mb-1">
+                <span class="text-on-surface-variant">Gastado: {{ summary.needs.spent_amount | currency:'USD':'symbol':'1.2-2' }}</span>
+                <span class="text-cyan-400 font-bold">{{ summary.needs.percentage_of_income }}%</span>
+              </div>
+              <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                <div class="h-full bg-cyan-400 rounded-full transition-all duration-500" [style.width.%]="summary.needs.percentage_of_income * 2"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 30% Wants -->
+          <div class="bg-surface-container-low border border-amber-500/20 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-xs uppercase tracking-wider text-amber-400 font-bold">30% Deseos</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/40">
+                Meta: {{ summary.wants.target_amount | currency:'USD':'symbol':'1.0-0' }}
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant">Restaurantes, entretenimiento, compras y viajes</p>
+            <div class="pt-2">
+              <div class="flex justify-between text-xs font-mono mb-1">
+                <span class="text-on-surface-variant">Gastado: {{ summary.wants.spent_amount | currency:'USD':'symbol':'1.2-2' }}</span>
+                <span class="text-amber-400 font-bold">{{ summary.wants.percentage_of_income }}%</span>
+              </div>
+              <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-400 rounded-full transition-all duration-500" [style.width.%]="(summary.wants.percentage_of_income / 30) * 100"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 20% Savings -->
+          <div class="bg-surface-container-low border border-emerald-500/20 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-xs uppercase tracking-wider text-emerald-400 font-bold">20% Ahorro & Deuda</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/40">
+                Meta: {{ summary.savings.target_amount | currency:'USD':'symbol':'1.0-0' }}
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant">Metas de ahorro, Cetes, fondo de emergencia e inversión</p>
+            <div class="pt-2">
+              <div class="flex justify-between text-xs font-mono mb-1">
+                <span class="text-on-surface-variant">Aportado: {{ summary.savings.spent_amount | currency:'USD':'symbol':'1.2-2' }}</span>
+                <span class="text-emerald-400 font-bold">{{ summary.savings.percentage_of_income }}%</span>
+              </div>
+              <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-400 rounded-full transition-all duration-500" [style.width.%]="(summary.savings.percentage_of_income / 20) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Category Budgets Section -->
+    <div class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 class="font-headline font-bold text-sm tracking-wider uppercase text-on-surface">
+          Topes de Gasto por Categoría
+        </h2>
+
+        <!-- Filters Tabs -->
+        <div class="flex gap-1 bg-surface-container-high p-1 rounded-lg border border-outline-variant/15 text-xs font-label uppercase">
+          <button
+            (click)="activeFilter.set('all')"
+            [class.bg-primary]="activeFilter() === 'all'"
+            [class.text-on-primary]="activeFilter() === 'all'"
+            [class.text-on-surface-variant]="activeFilter() !== 'all'"
+            class="px-3 py-1 rounded transition-all font-semibold"
+          >
+            Todos
+          </button>
+          <button
+            (click)="activeFilter.set('needs')"
+            [class.bg-primary]="activeFilter() === 'needs'"
+            [class.text-on-primary]="activeFilter() === 'needs'"
+            [class.text-on-surface-variant]="activeFilter() !== 'needs'"
+            class="px-3 py-1 rounded transition-all font-semibold"
+          >
+            Necesidades
+          </button>
+          <button
+            (click)="activeFilter.set('wants')"
+            [class.bg-primary]="activeFilter() === 'wants'"
+            [class.text-on-primary]="activeFilter() === 'wants'"
+            [class.text-on-surface-variant]="activeFilter() !== 'wants'"
+            class="px-3 py-1 rounded transition-all font-semibold"
+          >
+            Deseos
+          </button>
+          <button
+            (click)="activeFilter.set('savings')"
+            [class.bg-primary]="activeFilter() === 'savings'"
+            [class.text-on-primary]="activeFilter() === 'savings'"
+            [class.text-on-surface-variant]="activeFilter() !== 'savings'"
+            class="px-3 py-1 rounded transition-all font-semibold"
+          >
+            Ahorro
+          </button>
+        </div>
+      </div>
+
+      <!-- Budgets List / Grid -->
+      @if (filteredBudgets().length === 0) {
+        <div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-12 text-center space-y-4">
+          <span class="material-symbols-outlined text-4xl text-on-surface-variant/40">category</span>
+          <p class="text-sm text-on-surface-variant">No tienes presupuestos asignados en esta sección.</p>
+          <button
+            (click)="openCreateModal()"
+            class="px-4 py-2 bg-primary/10 border border-primary/30 text-primary text-xs font-label uppercase font-bold rounded-lg hover:bg-primary/20 transition-all"
+          >
+            Crear Presupuesto
+          </button>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for (b of filteredBudgets(); track b.id) {
+            <div class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-5 space-y-4 hover:border-outline-variant/40 transition-all">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold"
+                    [style.backgroundColor]="b.category_color ? b.category_color + '22' : '#47eaed22'"
+                    [style.color]="b.category_color || '#47eaed'"
+                  >
+                    <span class="material-symbols-outlined">{{ b.category_icon || 'label' }}</span>
+                  </div>
+                  <div>
+                    <h3 class="font-headline font-bold text-sm text-on-surface">{{ b.category_name || 'Categoría' }}</h3>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">
+                      {{ getBucketLabel(b.rule_bucket) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span
+                    class="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase font-semibold"
+                    [class.bg-emerald-500/20]="b.status === 'normal'"
+                    [class.text-emerald-300]="b.status === 'normal'"
+                    [class.bg-amber-500/20]="b.status === 'warning'"
+                    [class.text-amber-300]="b.status === 'warning'"
+                    [class.bg-error/20]="b.status === 'exceeded'"
+                    [class.text-error]="b.status === 'exceeded'"
+                  >
+                    {{ b.status === 'normal' ? 'Normal' : b.status === 'warning' ? 'Alerta' : 'Excedido' }}
+                  </span>
+
+                  <!-- Actions -->
+                  <button (click)="openEditModal(b)" class="p-1.5 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-base">edit</span>
+                  </button>
+                  <button (click)="deleteBudget(b)" class="p-1.5 text-on-surface-variant hover:text-error transition-colors">
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Progress Bar & Amounts -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between items-baseline text-xs font-mono">
+                  <span class="text-on-surface-variant">
+                    Gastado: <strong class="text-on-surface">{{ b.spent_this_month | currency:'USD':'symbol':'1.2-2' }}</strong>
+                  </span>
+                  <span class="text-on-surface-variant">
+                    Límite: <strong class="text-on-surface">{{ b.monthly_limit | currency:'USD':'symbol':'1.0-0' }}</strong>
+                  </span>
+                </div>
+
+                <div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    [class.bg-primary]="b.status === 'normal'"
+                    [class.bg-amber-400]="b.status === 'warning'"
+                    [class.bg-error]="b.status === 'exceeded'"
+                    [style.width.%]="b.percentage_used > 100 ? 100 : b.percentage_used"
+                  ></div>
+                </div>
+
+                <div class="flex justify-between items-center text-[11px] text-on-surface-variant">
+                  <span>{{ b.percentage_used }}% consumido</span>
+                  <span>Restante: <span class="font-mono text-primary font-semibold">{{ b.remaining | currency:'USD':'symbol':'1.2-2' }}</span></span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Modal: Crear / Editar Presupuesto -->
+  @if (isModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 w-full max-w-md space-y-6 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-outline-variant/15 pb-4">
+          <h3 class="font-headline font-bold text-lg text-on-surface uppercase tracking-tight">
+            {{ editingBudget() ? 'Editar Presupuesto' : 'Nuevo Presupuesto' }}
+          </h3>
+          <button (click)="closeModal()" class="text-on-surface-variant hover:text-on-surface">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="budgetForm" (ngSubmit)="onSubmit()" class="space-y-4">
+          <!-- Category Select (Only selectable on create) -->
+          <div class="space-y-1">
+            <label class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Categoría</label>
+            @if (editingBudget(); as editing) {
+              <div class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg p-3 text-sm text-on-surface font-semibold">
+                {{ editing.category_name }}
+              </div>
+            } @else {
+              <select
+                formControlName="category_id"
+                class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg p-3 text-sm text-on-surface focus:border-primary focus:outline-none"
+              >
+                <option value="" disabled>Selecciona una categoría</option>
+                @for (c of availableCategories(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <!-- Monthly Limit -->
+          <div class="space-y-1">
+            <label class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Límite Mensual ($)</label>
+            <input
+              type="number"
+              step="50"
+              formControlName="monthly_limit"
+              placeholder="Ej. 5000"
+              class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg p-3 text-sm text-on-surface focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <!-- Rule Bucket (50/30/20) -->
+          <div class="space-y-2">
+            <label class="font-label text-[10px] uppercase tracking-wider text-on-surface-variant">Clasificación Regla 50/30/20</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label
+                class="flex flex-col items-center p-3 rounded-lg border text-center cursor-pointer transition-all"
+                [class.border-cyan-400]="budgetForm.get('rule_bucket')?.value === 'needs'"
+                [class.bg-cyan-500/10]="budgetForm.get('rule_bucket')?.value === 'needs'"
+                [class.border-outline-variant/20]="budgetForm.get('rule_bucket')?.value !== 'needs'"
+              >
+                <input type="radio" value="needs" formControlName="rule_bucket" class="sr-only" />
+                <span class="text-xs font-bold text-cyan-400">50%</span>
+                <span class="text-[10px] text-on-surface-variant mt-1">Necesidad</span>
+              </label>
+
+              <label
+                class="flex flex-col items-center p-3 rounded-lg border text-center cursor-pointer transition-all"
+                [class.border-amber-400]="budgetForm.get('rule_bucket')?.value === 'wants'"
+                [class.bg-amber-500/10]="budgetForm.get('rule_bucket')?.value === 'wants'"
+                [class.border-outline-variant/20]="budgetForm.get('rule_bucket')?.value !== 'wants'"
+              >
+                <input type="radio" value="wants" formControlName="rule_bucket" class="sr-only" />
+                <span class="text-xs font-bold text-amber-400">30%</span>
+                <span class="text-[10px] text-on-surface-variant mt-1">Deseo</span>
+              </label>
+
+              <label
+                class="flex flex-col items-center p-3 rounded-lg border text-center cursor-pointer transition-all"
+                [class.border-emerald-400]="budgetForm.get('rule_bucket')?.value === 'savings'"
+                [class.bg-emerald-500/10]="budgetForm.get('rule_bucket')?.value === 'savings'"
+                [class.border-outline-variant/20]="budgetForm.get('rule_bucket')?.value !== 'savings'"
+              >
+                <input type="radio" value="savings" formControlName="rule_bucket" class="sr-only" />
+                <span class="text-xs font-bold text-emerald-400">20%</span>
+                <span class="text-[10px] text-on-surface-variant mt-1">Ahorro</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/15">
+            <button
+              type="button"
+              (click)="closeModal()"
+              class="px-4 py-2 text-xs font-label uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSubmitting() || budgetForm.invalid"
+              class="px-5 py-2.5 bg-primary text-on-primary font-label text-xs font-bold uppercase tracking-wider rounded-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {{ isSubmitting() ? 'Guardando...' : (editingBudget() ? 'Guardar Cambios' : 'Crear Presupuesto') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

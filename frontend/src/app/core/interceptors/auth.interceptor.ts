@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
@@ -26,33 +26,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Dejamos que la petición siga su camino, pero interceptamos posibles errores
   return next(clonedRequest).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Evitar bucle infinito si el error 401 viene del endpoint de refresh o login
-      if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/refresh')) {
-        console.warn('Token expirado. Intentando refrescar sesión...');
-        
-        return authService.refreshToken().pipe(
-          switchMap((res) => {
-            // Reintentar la petición original con el nuevo token
-            const retryReq = req.clone({
-              setHeaders: { Authorization: `Bearer ${res.access_token}` }
-            });
-            return next(retryReq);
-          }),
+      // 1. Si el 401 proviene del endpoint de login o de refresh, cerramos sesión inmediatamente sin reintentar
+      if (error.status === 401 && (req.url.includes('/auth/login') || req.url.includes('/auth/refresh'))) {
+        authService.logout();
+        router.navigate(['/auth/login']);
+        return throwError(() => error);
+      }
+
+      // 2. Si es cualquier otro 401 (token expirado), delegamos al mutex concurrente de AuthService
+      if (error.status === 401) {
+        return authService.handleTokenRefresh(req, next).pipe(
           catchError((refreshErr) => {
-            console.error('Refresh token expirado o inválido. Cerrando sesión automáticamente...');
-            authService.logout();
             router.navigate(['/auth/login']);
             return throwError(() => refreshErr);
           })
         );
       }
-      
-      // Si el servidor responde 401 en login o refresh, o si es otro error
-      if (error.status === 401 && req.url.includes('/auth/refresh')) {
-        authService.logout();
-        router.navigate(['/auth/login']);
-      }
-      
+
       return throwError(() => error);
     })
   );

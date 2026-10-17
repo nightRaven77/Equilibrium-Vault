@@ -30,6 +30,8 @@ export class TransactionModalComponent implements OnInit {
   public creditCards = signal<CreditCard[]>([]);
   public couples = signal<Couple[]>([]);
   public isLoading = signal<boolean>(false);
+  public isOcrLoading = signal<boolean>(false);
+  public ocrSuccess = signal<string | null>(null);
 
   public isEditMode = computed(() => !!this.modalService.selectedTransaction());
 
@@ -148,7 +150,42 @@ export class TransactionModalComponent implements OnInit {
     this.financeService.getCouples().subscribe((data) => this.couples.set(data));
   }
 
+  onReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.isOcrLoading.set(true);
+    this.ocrSuccess.set(null);
+
+    this.financeService.ocrReceipt(file).subscribe({
+      next: (ocr) => {
+        this.isOcrLoading.set(false);
+        this.transactionForm.patchValue({
+          type: 'expense',
+          ...(ocr.amount ? { amount: ocr.amount } : {}),
+          ...(ocr.merchant_name ? { description: ocr.merchant_name } : {}),
+          ...(ocr.transaction_date ? { transaction_date: ocr.transaction_date } : {}),
+          ...(ocr.category_id ? { category_id: ocr.category_id } : {}),
+          ...(ocr.notes ? { notes: ocr.notes } : {}),
+        });
+        const msg = ocr.merchant_name
+          ? `Ticket de "${ocr.merchant_name}" procesado con IA`
+          : 'Datos de recibo extraídos con éxito';
+        this.ocrSuccess.set(msg);
+        this.alertService.show('success', msg);
+        input.value = '';
+      },
+      error: (err) => {
+        this.isOcrLoading.set(false);
+        this.alertService.show('error', err.error?.detail || 'No se pudo procesar la imagen del recibo');
+        input.value = '';
+      }
+    });
+  }
+
   close() {
+    this.ocrSuccess.set(null);
+    this.isOcrLoading.set(false);
     this.modalService.closeTransactionModal();
     this.transactionForm.reset({
       type: 'expense',

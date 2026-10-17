@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.supabase import get_supabase_client
-from app.api.routers import personal, cards, recurring, couples, savings, auth, categories, profile
+from app.api.routers import personal, cards, recurring, couples, savings, auth, categories, profile, budgets
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -30,6 +30,7 @@ app.include_router(couples.router, prefix="/api/v1")
 app.include_router(savings.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
+app.include_router(budgets.router, prefix="/api/v1")
 
 @app.get("/health", tags=["system"])
 def health_check():
